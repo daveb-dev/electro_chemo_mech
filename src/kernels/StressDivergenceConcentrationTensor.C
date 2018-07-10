@@ -136,5 +136,5 @@ StressDivergenceConcentrationTensor::computeQpJacobian()
     jacobian += (_Jacobian_mult[_qp] * phi).trace() *
                 (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) / 3.0;
   }
-  jacobian += 
+  return jacobian;
 }
