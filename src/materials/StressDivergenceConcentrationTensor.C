@@ -91,7 +91,7 @@ StressDivergenceConcentrationTensor::computeOffDiagJacobian(MooseVariableFEBase 
 Real
 StressDivergenceConcentrationTensor::computeQpJacobian()
 {
-    Real sum_C3x3 = _Jacobian_mult[_qp].sum3x3();
+  Real sum_C3x3 = _Jacobian_mult[_qp].sum3x3();
   RealGradient sum_C3x1 = _Jacobian_mult[_qp].sum3x1();
 
   Real jacobian = 0.0;
@@ -136,5 +136,11 @@ StressDivergenceConcentrationTensor::computeQpJacobian()
     jacobian += (_Jacobian_mult[_qp] * phi).trace() *
                 (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) / 3.0;
   }
-  jacobian += 
+  RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
+  Real J = _deformation_gradient[_qp].det();
+  RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
+  Real jac_geom = pk2_stress.row(_component) * _grad_phi[_i][_qp];
+  jac_geom *= _grad_test[_i][_qp];
+  jacobian -= jac_geom;
+  
 }
