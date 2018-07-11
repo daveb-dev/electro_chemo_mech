@@ -139,8 +139,16 @@ StressDivergenceConcentrationTensor::computeQpJacobian()
   RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
   Real J = _deformation_gradient[_qp].det();
   RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
-  Real jac_geom = pk2_stress.row(_component) * _grad_phi[_i][_qp];
-  jac_geom *= _grad_test[_i][_qp];
+  Real jac_geom = pk2_stress.row(_component) * _grad_phi[_j][_qp];
+  jac_geom *= _grad_test[_i][_qp](_component);
   jacobian -= jac_geom;
-  
+  return jacobian;
+}
+
+Real
+StressDivergenceTensors::computeQpOffDiagJacobian(unsigned int jvar)
+{
+    Real jacobain = 0.0;
+    
+    return jacobian;
 }
