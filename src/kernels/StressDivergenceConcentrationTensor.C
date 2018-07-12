@@ -146,9 +146,9 @@ StressDivergenceConcentrationTensor::computeQpJacobian()
 }
 
 Real
-StressDivergenceTensors::computeQpOffDiagJacobian(unsigned int jvar)
+StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
 {
-    Real jacobain = 0.0;
+    Real jacobian = 0.0;
     
     return jacobian;
 }
