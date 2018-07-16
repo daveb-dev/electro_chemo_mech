@@ -14,6 +14,7 @@
 #include "ComputeTlNeoHookeanStress.h"
 #include "ElasticityTensorTools.h"
 
+registerMooseObject("electro_chemo_mechApp", ComputeTlNeoHookeanStress);
 template <>
 InputParameters
 validParams<ComputeTlNeoHookeanStress>()

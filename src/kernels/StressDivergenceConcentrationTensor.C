@@ -24,7 +24,7 @@
 #include "libmesh/quadrature.h"
 
 
-registerMooseObject("TensorMechanicsApp", StressDivergenceTensors);
+registerMooseObject("electro_chemo_mechApp", StressDivergenceConcentrationTensor);
 
 
 template <>
@@ -60,7 +60,7 @@ StressDivergenceConcentrationTensor::computeQpResidual()
     Real residual = pk2_stress.row(_component) * _grad_test[_i][_qp];
   // volumetric locking correction
     if (_volumetric_locking_correction)
-        residual += _stress[_qp].trace() / 3.0 *
+        residual += pk2_stress.trace() / 3.0 *
                 (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component));
 
     return residual;
@@ -148,7 +148,70 @@ StressDivergenceConcentrationTensor::computeQpJacobian()
 Real
 StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
 {
-    Real jacobian = 0.0;
-    
-    return jacobian;
+  // off-diagonal Jacobian with respect to a coupled displacement component
+  for (unsigned int coupled_component = 0; coupled_component < _ndisp; ++coupled_component)
+    if (jvar == _disp_var[coupled_component])
+    {
+      if (_out_of_plane_direction != 2)
+      {
+        if (coupled_component == _out_of_plane_direction)
+          continue;
+      }
+
+      const Real sum_C3x3 = _Jacobian_mult[_qp].sum3x3();
+      const RealGradient sum_C3x1 = _Jacobian_mult[_qp].sum3x1();
+      Real jacobian = 0.0;
+
+      // B^T_i * C * B_j
+      jacobian += ElasticityTensorTools::elasticJacobian(_Jacobian_mult[_qp],
+                                                         _component,
+                                                         coupled_component,
+                                                         _grad_test[_i][_qp],
+                                                         _grad_phi[_j][_qp]);
+
+      if (_volumetric_locking_correction)
+      {
+        // jacobian = Bbar^T_i * C * Bbar_j where Bbar = B + Bvol
+        // jacobian = B^T_i * C * B_j + Bvol^T_i * C * Bvol_j +  Bvol^T_i * C * B_j + B^T_i * C *
+        // Bvol_j
+
+        // Bvol^T_i * C * Bvol_j
+        jacobian += sum_C3x3 * (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) *
+                    (_avg_grad_phi[_j][coupled_component] - _grad_phi[_j][_qp](coupled_component)) /
+                    9.0;
+
+        // B^T_i * C * Bvol_j
+        jacobian += sum_C3x1(_component) * _grad_test[_i][_qp](_component) *
+                    (_avg_grad_phi[_j][coupled_component] - _grad_phi[_j][_qp](coupled_component)) /
+                    3.0;
+
+        // Bvol^T_i * C * B_i
+        RankTwoTensor phi;
+        for (unsigned int i = 0; i < 3; ++i)
+          phi(coupled_component, i) = _grad_phi[_j][_qp](i);
+
+        jacobian += (_Jacobian_mult[_qp] * phi).trace() *
+                    (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) / 3.0;
+      }
+      RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
+      Real J = _deformation_gradient[_qp].det();
+      RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
+      Real jac_geom = pk2_stress.row(_component) * _grad_phi[_j][_qp];
+      jac_geom *= _grad_test[_i][_qp](coupled_component);
+      jacobian -= jac_geom;
+      return jacobian;
+    }
+
+  // off-diagonal Jacobian with respect to a coupled out_of_plane_strain variable
+  if (_out_of_plane_strain_coupled && jvar == _out_of_plane_strain_var)
+    return _Jacobian_mult[_qp](
+               _component, _component, _out_of_plane_direction, _out_of_plane_direction) *
+           _grad_test[_i][_qp](_component) * _phi[_j][_qp];
+
+  // off-diagonal Jacobian with respect to a coupled temperature variable
+  if (_temp_coupled && jvar == _temp_var)
+    return -((_Jacobian_mult[_qp] * (*_deigenstrain_dT)[_qp]) *
+             _grad_test[_i][_qp])(_component)*_phi[_j][_qp];
+
+  return 0.0;
 }
