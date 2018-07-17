@@ -52,20 +52,20 @@
 []
 
 [Materials]
-  [./strain]
-    type = ComputeTlFiniteStrainBase
-    displacements = 'x_disp y_disp'
-  [../]
-  [./stress]
-    type = ComputeTlNeoHookeanStress
-  [../]
-
   [./elasticity_tensor]
     type = ComputeElasticityTensor
     block = 0
     fill_method = symmetric_isotropic
     C_ijkl = '10.0 1.0'
     displacements = 'x_disp y_disp'
+  [../]
+  [./strain]
+    type = Compute2DTlFiniteStrain
+    displacements = 'x_disp y_disp'
+    out_of_plane_direction = z
+  [../]
+  [./stress]
+    type = ComputeTlNeoHookeanStress
   [../]
 []
 
@@ -80,7 +80,7 @@
 []
 
 [BCs]
-  active = 'left_y left_x'
+  active = 'left_y left_x pressure'
   [./left_y]
     type = PresetBC
     variable = y_disp
@@ -97,8 +97,9 @@
     type = Pressure
     boundary = right
     function = rampConstant
+    variable = x_disp
+    component = 0
   [../]
-
 []
 
 [Preconditioning]
@@ -118,7 +119,20 @@
   nl_abs_tol = 1.0e-6
   nl_max_its = 50
 []
-
+[Postprocessors]
+  [./force]
+    type = SideIntegralVariablePostprocessor
+    boundary = right
+    variable = stress_11
+  [../]
+[]
 [Outputs]
   exodus = true
+  console = true
+  gnuplot = true
+  [./dis_mesh]
+    type = Exodus
+    file_base = displace
+    use_displaced = true
+  [../]
 []

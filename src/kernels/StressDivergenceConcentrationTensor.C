@@ -43,6 +43,12 @@ validParams<StressDivergenceConcentrationTensor>()
     params.addParam<bool>("volumetric_locking_correction",
                         false,
                         "Set to false to turn off volumetric locking correction");
+    MooseEnum out_of_plane_direction("x y z", "z");
+    params.addParam<MooseEnum>(
+      "out_of_plane_direction",
+      out_of_plane_direction,
+      "The direction of the out_of_plane_strain variable used in the WeakPlaneStress kernel.");
+    params.addParam<std::string>("base_name", "Material property base name");
 
     return params;
 }
@@ -55,7 +61,8 @@ StressDivergenceConcentrationTensor::StressDivergenceConcentrationTensor(const I
     _deformation_gradient(getMaterialPropertyByName<RankTwoTensor>(_base_name + "deformation_gradient")),
     _component(getParam<unsigned int>("component")),
     _ndisp(coupledComponents("displacements")),
-    _disp_var(_ndisp),
+    _disp_var(_ndisp),        
+    _out_of_plane_direction(getParam<MooseEnum>("out_of_plane_direction")),        
     _avg_grad_test(_test.size(), std::vector<Real>(3, 0.0)),
     _avg_grad_phi(_phi.size(), std::vector<Real>(3, 0.0)),
     _volumetric_locking_correction(getParam<bool>("volumetric_locking_correction"))
@@ -205,6 +212,12 @@ StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
   for (unsigned int coupled_component = 0; coupled_component < _ndisp; ++coupled_component)
     if (jvar == _disp_var[coupled_component])
     {
+        
+      if (_out_of_plane_direction != 2)
+      {
+        if (coupled_component == _out_of_plane_direction)
+          continue;
+      }  
       const Real sum_C3x3 = _Jacobian_mult[_qp].sum3x3();
       const RealGradient sum_C3x1 = _Jacobian_mult[_qp].sum3x1();
       Real jacobian = 0.0;

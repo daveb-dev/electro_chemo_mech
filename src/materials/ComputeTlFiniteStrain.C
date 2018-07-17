@@ -7,7 +7,7 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "ComputeTlFiniteStrainBase.h"
+#include "ComputeTlFiniteStrain.h"
 #include "Assembly.h"
 #include "libmesh/quadrature.h"
 
