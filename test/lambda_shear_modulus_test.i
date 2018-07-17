@@ -23,8 +23,8 @@
 [Functions]
   [./rampConstant]
     type = PiecewiseLinear
-    x = '0. 10.'
-    y = '0. 10.'
+    x = '0. 1.'
+    y = '0. 1.'
     scale_factor = 2.0
   [../]
 []
@@ -53,10 +53,9 @@
 
 [Materials]
   [./elasticity_tensor]
-    type = ComputeElasticityTensor
-    block = 0
-    fill_method = symmetric_isotropic
-    C_ijkl = '10.0 1.0'
+    type = ComputeIsotropicElasticityTensor
+    bulk_modulus = 10.0
+    shear_modulus = 1.0
     displacements = 'x_disp y_disp'
   [../]
   [./strain]
@@ -80,11 +79,11 @@
 []
 
 [BCs]
-  active = 'left_y left_x pressure'
-  [./left_y]
+  active = 'bot_y left_x pressure'
+  [./bot_y]
     type = PresetBC
     variable = y_disp
-    boundary = left
+    boundary = bottom
     value = 0
   [../]
   [./left_x]
