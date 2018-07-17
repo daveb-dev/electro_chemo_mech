@@ -31,24 +31,77 @@ template <>
 InputParameters
 validParams<StressDivergenceConcentrationTensor>()
 {
-    InputParameters params = validParams<StressDivergenceTensors>();
+    InputParameters params = validParams<ALEKernel>();
     params.addClassDescription("Stress Divergence in Total Lagrangian formulation in Cartesian coordinates");
-    params.addParam<bool>(
-      "use_finite_deform_jacobian", true, "Finite strain jacobian with Geometric term");
-     return params;
+    params.addRequiredParam<unsigned int>("component",
+                                        "An integer corresponding to the direction "
+                                        "the variable this kernel acts in. (0 for x, "
+                                        "1 for y, 2 for z)");
+    params.addRequiredCoupledVar("displacements",
+                               "The string of displacements suitable for the problem statement");
+    params.addParam<std::string>("base_name", "Material property base name");
+    params.addParam<bool>("volumetric_locking_correction",
+                        false,
+                        "Set to false to turn off volumetric locking correction");
+
+    return params;
 }
 
-StressDivergenceConcentrationTensor::StressDivergenceConcentrationTensor(const InputParameters & parameters) 
-    : StressDivergenceTensors(parameters),
-    _deformation_gradient(getMaterialProperty<RankTwoTensor>(_base_name + "deformation_gradient"))
+StressDivergenceConcentrationTensor::StressDivergenceConcentrationTensor(const InputParameters& parameters)
+    : ALEKernel(parameters),
+    _base_name(isParamValid("base_name") ? getParam<std::string>("base_name") + "_" : ""),
+    _stress(getMaterialPropertyByName<RankTwoTensor>(_base_name + "stress")),
+    _Jacobian_mult(getMaterialPropertyByName<RankFourTensor>(_base_name + "Jacobian_mult")),
+    _deformation_gradient(getMaterialPropertyByName<RankTwoTensor>(_base_name + "deformation_gradient")),
+    _component(getParam<unsigned int>("component")),
+    _ndisp(coupledComponents("displacements")),
+    _disp_var(_ndisp),
+    _avg_grad_test(_test.size(), std::vector<Real>(3, 0.0)),
+    _avg_grad_phi(_phi.size(), std::vector<Real>(3, 0.0)),
+    _volumetric_locking_correction(getParam<bool>("volumetric_locking_correction"))
+    
 {
-   
+  for (unsigned int i = 0; i < _ndisp; ++i)
+    _disp_var[i] = coupled("displacements", i); 
+    // Error if volumetic locking correction is turned on for 1D problems
+  if (_ndisp == 1 && _volumetric_locking_correction)
+    mooseError("Volumetric locking correction should be set to false for 1-D problems.");
+
+}
+
+
+
+void
+StressDivergenceConcentrationTensor::initialSetup()
+{
+  if (getBlockCoordSystem() != Moose::COORD_XYZ)
+    mooseError(
+        "The coordinate system in the Problem block must be set to XYZ for cartesian geometries.");
 }
 
 void
 StressDivergenceConcentrationTensor::computeResidual()
 {
-    StressDivergenceTensors::computeResidual();
+    DenseVector<Number> & re = _assembly.residualBlock(_var.number());
+  _local_re.resize(re.size());
+  _local_re.zero();
+
+  if (_volumetric_locking_correction)
+    computeAverageGradientTest();
+
+  precalculateResidual();
+  for (_i = 0; _i < _test.size(); ++_i)
+    for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
+      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
+
+  re += _local_re;
+
+  if (_has_save_in)
+  {
+    Threads::spin_mutex::scoped_lock lock(Threads::spin_mtx);
+    for (const auto & var : _save_in)
+      var->sys().solution().add_vector(_local_re, var->dofIndices());
+  }
 }
 
 Real
@@ -71,8 +124,8 @@ StressDivergenceConcentrationTensor::computeJacobian()
 {
   if (_volumetric_locking_correction)
     {
-      StressDivergenceTensors::computeAverageGradientTest();
-      StressDivergenceTensors::computeAverageGradientPhi();
+      computeAverageGradientTest();
+      computeAverageGradientPhi();
     }
     Kernel::computeJacobian();
 }
@@ -82,8 +135,8 @@ StressDivergenceConcentrationTensor::computeOffDiagJacobian(MooseVariableFEBase 
 {
   if (_volumetric_locking_correction)
     {
-      StressDivergenceTensors::computeAverageGradientTest();
-      StressDivergenceTensors::computeAverageGradientPhi();
+      computeAverageGradientTest();
+      computeAverageGradientPhi();
     }
     Kernel::computeOffDiagJacobian(jvar);
 }
@@ -152,12 +205,6 @@ StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
   for (unsigned int coupled_component = 0; coupled_component < _ndisp; ++coupled_component)
     if (jvar == _disp_var[coupled_component])
     {
-      if (_out_of_plane_direction != 2)
-      {
-        if (coupled_component == _out_of_plane_direction)
-          continue;
-      }
-
       const Real sum_C3x3 = _Jacobian_mult[_qp].sum3x3();
       const RealGradient sum_C3x1 = _Jacobian_mult[_qp].sum3x1();
       Real jacobian = 0.0;
@@ -202,16 +249,40 @@ StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
       return jacobian;
     }
 
-  // off-diagonal Jacobian with respect to a coupled out_of_plane_strain variable
-  if (_out_of_plane_strain_coupled && jvar == _out_of_plane_strain_var)
-    return _Jacobian_mult[_qp](
-               _component, _component, _out_of_plane_direction, _out_of_plane_direction) *
-           _grad_test[_i][_qp](_component) * _phi[_j][_qp];
-
-  // off-diagonal Jacobian with respect to a coupled temperature variable
-  if (_temp_coupled && jvar == _temp_var)
-    return -((_Jacobian_mult[_qp] * (*_deigenstrain_dT)[_qp]) *
-             _grad_test[_i][_qp])(_component)*_phi[_j][_qp];
-
   return 0.0;
+}
+
+void
+StressDivergenceConcentrationTensor::computeAverageGradientTest()
+{
+  // Calculate volume averaged value of shape function derivative
+  _avg_grad_test.resize(_test.size());
+  for (_i = 0; _i < _test.size(); ++_i)
+  {
+    _avg_grad_test[_i].resize(3);
+    _avg_grad_test[_i][_component] = 0.0;
+    for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
+      _avg_grad_test[_i][_component] += _grad_test[_i][_qp](_component) * _JxW[_qp] * _coord[_qp];
+
+    _avg_grad_test[_i][_component] /= _current_elem_volume;
+  }
+}
+
+void
+StressDivergenceConcentrationTensor::computeAverageGradientPhi()
+{
+  // Calculate volume average derivatives for phi
+  _avg_grad_phi.resize(_phi.size());
+  for (_i = 0; _i < _phi.size(); ++_i)
+  {
+    _avg_grad_phi[_i].resize(3);
+    for (unsigned int component = 0; component < _mesh.dimension(); ++component)
+    {
+      _avg_grad_phi[_i][component] = 0.0;
+      for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
+        _avg_grad_phi[_i][component] += _grad_phi[_i][_qp](component) * _JxW[_qp] * _coord[_qp];
+
+      _avg_grad_phi[_i][component] /= _current_elem_volume;
+    }
+  }
 }
