@@ -11,11 +11,11 @@
 #include "Assembly.h"
 #include "libmesh/quadrature.h"
 
-registerMooseObject("electro_chemo_mechApp", ComputeTlFiniteStrainBase);
+registerMooseObject("electro_chemo_mechApp", ComputeTlFiniteStrain);
 
 template <>
 InputParameters
-validParams<ComputeTlFiniteStrainBase>()
+validParams<ComputeTlFiniteStrain>()
 {
   InputParameters params = validParams<ComputeStrainBase>();
   params.addClassDescription("Compute a Total Lagrangian strain measure e.g. Lagrange Strain, Green-Lagrange, Logarithmic"); 
@@ -23,13 +23,13 @@ validParams<ComputeTlFiniteStrainBase>()
   return params;
 }
 
-ComputeTlFiniteStrainBase::ComputeTlFiniteStrainBase(const InputParameters & parameters)
+ComputeTlFiniteStrain::ComputeTlFiniteStrain(const InputParameters & parameters)
   : ComputeStrainBase(parameters),
         _deformation_gradient(declareProperty<RankTwoTensor>(_base_name + "deformation_gradient"))
 {
 }
 void
-ComputeTlFiniteStrainBase::initialSetup()
+ComputeTlFiniteStrain::initialSetup()
 {
     ComputeStrainBase::initialSetup();
     _deformation_gradient[_qp].zero();
@@ -37,7 +37,7 @@ ComputeTlFiniteStrainBase::initialSetup()
 } 
 
 void
-ComputeTlFiniteStrainBase::initQpStatefulProperties()
+ComputeTlFiniteStrain::initQpStatefulProperties()
 {
     _deformation_gradient[_qp].zero();
     _deformation_gradient[_qp].addIa(1.0);
@@ -45,7 +45,7 @@ ComputeTlFiniteStrainBase::initQpStatefulProperties()
  
 
 void
-ComputeTlFiniteStrainBase::computeProperties()
+ComputeTlFiniteStrain::computeProperties()
 {
     Real average_deformation_gradient = 0.0;
     for (_qp = 0; _qp < _qrule->n_points(); ++_qp)

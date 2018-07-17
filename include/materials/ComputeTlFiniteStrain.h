@@ -12,19 +12,19 @@
 
 #include "ComputeStrainBase.h"
 
-class ComputeTlFiniteStrainBase;
+class ComputeTlFiniteStrain;
 
 template <>
-InputParameters validParams<ComputeTlFiniteStrainBase>();
+InputParameters validParams<ComputeTlFiniteStrain>();
 
 /**
  * ComputeTlFiniteStrainBase defines a Finite strain strain tensor based on Total Lagrangian formulation 
  * 
  */
-class ComputeTlFiniteStrainBase : public ComputeStrainBase
+class ComputeTlFiniteStrain : public ComputeStrainBase
 {
 public:
-  ComputeTlFiniteStrainBase(const InputParameters & parameters);
+  ComputeTlFiniteStrain(const InputParameters & parameters);
   
 protected:
     void initialSetup() override;
