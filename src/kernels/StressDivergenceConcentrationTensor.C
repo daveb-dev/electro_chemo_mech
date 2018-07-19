@@ -39,7 +39,6 @@ validParams<StressDivergenceConcentrationTensor>()
                                         "1 for y, 2 for z)");
     params.addRequiredCoupledVar("displacements",
                                "The string of displacements suitable for the problem statement");
-    params.addParam<std::string>("base_name", "Material property base name");
     params.addParam<bool>("volumetric_locking_correction",
                         false,
                         "Set to false to turn off volumetric locking correction");
@@ -48,7 +47,9 @@ validParams<StressDivergenceConcentrationTensor>()
       "out_of_plane_direction",
       out_of_plane_direction,
       "The direction of the out_of_plane_strain variable used in the WeakPlaneStress kernel.");
+    params.addParam<bool>("use_geometric_jacobian",false,"Set to true to turn on Geometric stiffness contribution");
     params.addParam<std::string>("base_name", "Material property base name");
+    params.set<bool>("use_displaced_mesh") = true;
 
     return params;
 }
@@ -65,7 +66,8 @@ StressDivergenceConcentrationTensor::StressDivergenceConcentrationTensor(const I
     _out_of_plane_direction(getParam<MooseEnum>("out_of_plane_direction")),        
     _avg_grad_test(_test.size(), std::vector<Real>(3, 0.0)),
     _avg_grad_phi(_phi.size(), std::vector<Real>(3, 0.0)),
-    _volumetric_locking_correction(getParam<bool>("volumetric_locking_correction"))
+    _volumetric_locking_correction(getParam<bool>("volumetric_locking_correction")),
+    _use_geometric_jacobian(getParam<bool>("use_geometric_jacobian"))
     
 {
   for (unsigned int i = 0; i < _ndisp; ++i)
@@ -116,13 +118,17 @@ StressDivergenceConcentrationTensor::computeQpResidual()
 {
     RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
     Real J = _deformation_gradient[_qp].det();
-    RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
-    Real residual = pk2_stress.row(_component) * _grad_test[_i][_qp];
-  // volumetric locking correction
-    if (_volumetric_locking_correction)
-        residual += pk2_stress.trace() / 3.0 *
-                (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component));
-
+//    RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
+//    Real residual = pk2_stress.row(_component) * _grad_test[_i][_qp];
+//  // volumetric locking correction
+//    if (_volumetric_locking_correction)
+//        residual += pk2_stress.trace() / 3.0 *
+//                (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component));
+    
+    RealGradient grad_test_i = Finv.transpose()*_grad_test[_i][_qp];
+    
+    RankTwoTensor tstress = _stress[_qp]*J; // Kirchoff stress
+    Real residual = tstress.row(_component)*grad_test_i; 
     return residual;
 }
 
@@ -153,11 +159,14 @@ StressDivergenceConcentrationTensor::computeQpJacobian()
 {
   Real sum_C3x3 = _Jacobian_mult[_qp].sum3x3();
   RealGradient sum_C3x1 = _Jacobian_mult[_qp].sum3x1();
+  RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
+  RealGradient grad_test_i = Finv.transpose()*_grad_test[_i][_qp];
+  RealGradient grad_phi_j = Finv.transpose()*_grad_phi[_j][_qp];
 
   Real jacobian = 0.0;
   // B^T_i * C * B_j
   jacobian += ElasticityTensorTools::elasticJacobian(
-      _Jacobian_mult[_qp], _component, _component, _grad_test[_i][_qp], _grad_phi[_j][_qp]);
+      _Jacobian_mult[_qp], _component, _component, grad_test_i, grad_phi_j);
 
   if (_volumetric_locking_correction)
   {
@@ -196,18 +205,24 @@ StressDivergenceConcentrationTensor::computeQpJacobian()
     jacobian += (_Jacobian_mult[_qp] * phi).trace() *
                 (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) / 3.0;
   }
-  RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
-  Real J = _deformation_gradient[_qp].det();
-  RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
-  Real jac_geom = pk2_stress.row(_component) * _grad_phi[_j][_qp];
-  jac_geom *= _grad_test[_i][_qp](_component);
-  jacobian -= jac_geom;
+  if (_use_geometric_jacobian) 
+  {
+    Real J = _deformation_gradient[_qp].det();
+    //RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
+    RankTwoTensor tstress = _stress[_qp]*J;
+    Real jac_geom = tstress.row(_component) * grad_phi_j;
+    jac_geom *= grad_test_i(_component);
+    jacobian -= jac_geom;
+  }
   return jacobian;
 }
 
 Real
 StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
 {
+  RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
+  RealGradient grad_test_i = Finv.transpose()*_grad_test[_i][_qp];
+  RealGradient grad_phi_j = Finv.transpose()*_grad_phi[_j][_qp];    
   // off-diagonal Jacobian with respect to a coupled displacement component
   for (unsigned int coupled_component = 0; coupled_component < _ndisp; ++coupled_component)
     if (jvar == _disp_var[coupled_component])
@@ -226,8 +241,8 @@ StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
       jacobian += ElasticityTensorTools::elasticJacobian(_Jacobian_mult[_qp],
                                                          _component,
                                                          coupled_component,
-                                                         _grad_test[_i][_qp],
-                                                         _grad_phi[_j][_qp]);
+                                                         grad_test_i,
+                                                         grad_phi_j);
 
       if (_volumetric_locking_correction)
       {
@@ -253,13 +268,17 @@ StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
         jacobian += (_Jacobian_mult[_qp] * phi).trace() *
                     (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) / 3.0;
       }
-      RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
-      Real J = _deformation_gradient[_qp].det();
-      RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
-      Real jac_geom = pk2_stress.row(_component) * _grad_phi[_j][_qp];
-      jac_geom *= _grad_test[_i][_qp](coupled_component);
-      jacobian -= jac_geom;
-      return jacobian;
+      if (_use_geometric_jacobian)
+      {
+        //RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
+        Real J = _deformation_gradient[_qp].det();
+        //RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
+        RankTwoTensor tstress = _stress[_qp]*J;
+        Real jac_geom = tstress.row(_component) * grad_phi_j;
+        jac_geom *= grad_test_i(coupled_component);
+        jacobian -= jac_geom;
+        return jacobian;
+      }
     }
 
   return 0.0;

@@ -73,6 +73,9 @@ protected:
   /// Flag for volumetric locking correction
   bool _volumetric_locking_correction;
   
+  /// Flag for geometric jacobian contribution
+  bool _use_geometric_jacobian;
+  
   
 private:
 
