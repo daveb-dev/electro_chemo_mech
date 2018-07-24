@@ -41,12 +41,8 @@ protected:
   virtual Real computeQpJacobian() override;
   virtual Real computeQpOffDiagJacobian(unsigned int jvar) override;
 
-  //virtual void computeFiniteDeformJacobian();
-  virtual void computeAverageGradientTest();
-  virtual void computeAverageGradientPhi();
 
   std::string _base_name;
-  //bool _use_finite_deform_jacobian;
 
   const MaterialProperty<RankTwoTensor> & _stress;
   const MaterialProperty<RankFourTensor> & _Jacobian_mult;
@@ -59,23 +55,11 @@ protected:
   unsigned int _ndisp;
   std::vector<unsigned int> _disp_var;
   
-//  const bool _out_of_plane_strain_coupled;
-//  const unsigned int _out_of_plane_strain_var;
+  const bool _conc_coupled;
+  const unsigned int _conc_var;
+  
   const unsigned int _out_of_plane_direction;
-
-
-  /// Gradient of test function averaged over the element. Used in volumetric locking correction calculation.
-  std::vector<std::vector<Real>> _avg_grad_test;
-
-  /// Gradient of phi function averaged over the element. Used in volumetric locking correction calculation.
-  std::vector<std::vector<Real>> _avg_grad_phi;
-
-  /// Flag for volumetric locking correction
-  bool _volumetric_locking_correction;
-  
-  /// Flag for geometric jacobian contribution
-  bool _use_geometric_jacobian;
-  
+   
   
 private:
 

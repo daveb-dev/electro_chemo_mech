@@ -5,7 +5,7 @@
  */
 
 /* 
- * File:   ComputeTLPkStress.h
+ * File:   ComputeTLNeoHookeanPkStress.h
  * Author: srinath
  *
  * Created on July 24, 2018, 10:07 AM
@@ -14,14 +14,24 @@
 #ifndef COMPUTETLNEOHOOKEANPKSTRESS_H
 #define COMPUTETLNEOHOOKEANPKSTRESS_H
 
-class ComputeTLPkStress {
+#include "ComputeTlFiniteStrainStress.h"
+
+//Forward Declaration
+class ComputeTLNeoHookeanPkStress;
+
+template <>
+InputParameters validParams<ComputeTLNeoHookeanPkStress>();
+
+class ComputeTLNeoHookeanPkStress : public ComputeTlFiniteStrainStress 
+
+{
 public:
-    ComputeTLPkStress();
-    ComputeTLPkStress(const ComputeTLPkStress& orig);
-    virtual ~ComputeTLPkStress();
+    ComputeTLNeoHookeanPkStress(const InputParameters & parameters);
+protected:
+    virtual void computeQpStress();
 private:
 
 };
 
-#endif /* COMPUTETLPKSTRESS_H */
+#endif /* COMPUTETLNEOHOOKEANPKSTRESS_H */
 

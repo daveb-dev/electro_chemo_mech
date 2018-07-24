@@ -38,6 +38,8 @@ validParams<Bucci2016>()
                                         "1 for y, 2 for z)");
     params.addRequiredCoupledVar("displacements",
                                "The string of displacements suitable for the problem statement");
+    params.addCoupledVar("concentration", 
+            "The name of the concentration variable used in a different kernel");
     params.addParam<bool>("volumetric_locking_correction",
                         false,
                         "Set to false to turn off volumetric locking correction");
@@ -46,7 +48,6 @@ validParams<Bucci2016>()
       "out_of_plane_direction",
       out_of_plane_direction,
       "The direction of the out_of_plane_strain variable used in the WeakPlaneStress kernel.");
-    params.addParam<bool>("use_geometric_jacobian",false,"Set to true to turn on Geometric stiffness contribution");
     params.addParam<std::string>("base_name", "Material property base name");
     params.set<bool>("use_displaced_mesh") = true;
 
@@ -61,20 +62,14 @@ Bucci2016::Bucci2016(const InputParameters& parameters)
     _deformation_gradient(getMaterialPropertyByName<RankTwoTensor>(_base_name + "deformation_gradient")),
     _component(getParam<unsigned int>("component")),
     _ndisp(coupledComponents("displacements")),
-    _disp_var(_ndisp),        
-    _out_of_plane_direction(getParam<MooseEnum>("out_of_plane_direction")),        
-    _avg_grad_test(_test.size(), std::vector<Real>(3, 0.0)),
-    _avg_grad_phi(_phi.size(), std::vector<Real>(3, 0.0)),
-    _volumetric_locking_correction(getParam<bool>("volumetric_locking_correction")),
-    _use_geometric_jacobian(getParam<bool>("use_geometric_jacobian"))
+    _disp_var(_ndisp),
+    _conc_coupled(isCoupled("concentration")),
+    _conc_var(_conc_coupled ? coupled("concentration") :0),
+    _out_of_plane_direction(getParam<MooseEnum>("out_of_plane_direction"))        
     
 {
   for (unsigned int i = 0; i < _ndisp; ++i)
     _disp_var[i] = coupled("displacements", i); 
-    // Error if volumetic locking correction is turned on for 1D problems
-  if (_ndisp == 1 && _volumetric_locking_correction)
-    mooseError("Volumetric locking correction should be set to false for 1-D problems.");
-
 }
 
 
@@ -94,9 +89,7 @@ Bucci2016::computeResidual()
   _local_re.resize(re.size());
   _local_re.zero();
 
-  if (_volumetric_locking_correction)
-    computeAverageGradientTest();
-
+  
   precalculateResidual();
   for (_i = 0; _i < _test.size(); ++_i)
     for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
@@ -117,112 +110,43 @@ Bucci2016::computeQpResidual()
 {
     RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
     Real J = _deformation_gradient[_qp].det();
-//    RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
-//    Real residual = pk2_stress.row(_component) * _grad_test[_i][_qp];
-//  // volumetric locking correction
-//    if (_volumetric_locking_correction)
-//        residual += pk2_stress.trace() / 3.0 *
-//                (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component));
+    RankTwoTensor FinvT = Finv.transpose();
+    //Real mu = mu0 - lambda0*logJ;
     
-    RealGradient grad_test_i = Finv.transpose()*_grad_test[_i][_qp];
+    RankTwoTensor Pk1 = J*_stress[_qp]*FinvT;
     
-    RankTwoTensor tstress = _stress[_qp]*J; // Kirchoff stress
-    Real residual = tstress.row(_component)*grad_test_i; 
+    Real residual = Pk1.row(_component)*_grad_test[_i][_qp];
     return residual;
 }
 
 void
 Bucci2016::computeJacobian()
 {
-  if (_volumetric_locking_correction)
-    {
-      computeAverageGradientTest();
-      computeAverageGradientPhi();
-    }
     Kernel::computeJacobian();
 }
 
 void
 Bucci2016::computeOffDiagJacobian(MooseVariableFEBase & jvar)
 {
-  if (_volumetric_locking_correction)
-    {
-      computeAverageGradientTest();
-      computeAverageGradientPhi();
-    }
     Kernel::computeOffDiagJacobian(jvar);
 }
 
 Real
 Bucci2016::computeQpJacobian()
 {
-  Real sum_C3x3 = _Jacobian_mult[_qp].sum3x3();
-  RealGradient sum_C3x1 = _Jacobian_mult[_qp].sum3x1();
-  RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
-  RealGradient grad_test_i = Finv.transpose()*_grad_test[_i][_qp];
-  RealGradient grad_phi_j = Finv.transpose()*_grad_phi[_j][_qp];
 
   Real jacobian = 0.0;
-  // B^T_i * C * B_j
-  jacobian += ElasticityTensorTools::elasticJacobian(
-      _Jacobian_mult[_qp], _component, _component, grad_test_i, grad_phi_j);
-
-  if (_volumetric_locking_correction)
-  {
-    // jacobian = Bbar^T_i * C * Bbar_j where Bbar = B + Bvol
-    // jacobian = B^T_i * C * B_j + Bvol^T_i * C * Bvol_j +  Bvol^T_i * C * B_j + B^T_i * C * Bvol_j
-
-    // Bvol^T_i * C * Bvol_j
-    jacobian += sum_C3x3 * (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) *
-                (_avg_grad_phi[_j][_component] - _grad_phi[_j][_qp](_component)) / 9.0;
-
-    // B^T_i * C * Bvol_j
-    jacobian += sum_C3x1(_component) * _grad_test[_i][_qp](_component) *
-                (_avg_grad_phi[_j][_component] - _grad_phi[_j][_qp](_component)) / 3.0;
-
-    // Bvol^T_i * C * B_j
-    RankTwoTensor phi;
-    if (_component == 0)
-    {
-      phi(0, 0) = _grad_phi[_j][_qp](0);
-      phi(0, 1) = phi(1, 0) = _grad_phi[_j][_qp](1);
-      phi(0, 2) = phi(2, 0) = _grad_phi[_j][_qp](2);
-    }
-    else if (_component == 1)
-    {
-      phi(1, 1) = _grad_phi[_j][_qp](1);
-      phi(0, 1) = phi(1, 0) = _grad_phi[_j][_qp](0);
-      phi(1, 2) = phi(2, 1) = _grad_phi[_j][_qp](2);
-    }
-    else if (_component == 2)
-    {
-      phi(2, 2) = _grad_phi[_j][_qp](2);
-      phi(0, 2) = phi(2, 0) = _grad_phi[_j][_qp](0);
-      phi(1, 2) = phi(2, 1) = _grad_phi[_j][_qp](1);
-    }
-
-    jacobian += (_Jacobian_mult[_qp] * phi).trace() *
-                (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) / 3.0;
-  }
-  if (_use_geometric_jacobian) 
-  {
-    Real J = _deformation_gradient[_qp].det();
-    //RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
-    RankTwoTensor tstress = _stress[_qp]*J;
-    Real jac_geom = tstress.row(_component) * grad_phi_j;
-    jac_geom *= grad_test_i(_component);
-    jacobian -= jac_geom;
-  }
+  jacobian += ElasticityTensorTools::elasticJacobian(_Jacobian_mult[_qp], 
+                                                     _component,
+                                                     _component, 
+                                                     _grad_test[_i][_qp], 
+                                                     _grad_phi[_j][_qp]);
   return jacobian;
 }
 
 Real
 Bucci2016::computeQpOffDiagJacobian(unsigned int jvar)
 {
-  RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
-  RealGradient grad_test_i = Finv.transpose()*_grad_test[_i][_qp];
-  RealGradient grad_phi_j = Finv.transpose()*_grad_phi[_j][_qp];    
-  // off-diagonal Jacobian with respect to a coupled displacement component
   for (unsigned int coupled_component = 0; coupled_component < _ndisp; ++coupled_component)
     if (jvar == _disp_var[coupled_component])
     {
@@ -232,89 +156,18 @@ Bucci2016::computeQpOffDiagJacobian(unsigned int jvar)
         if (coupled_component == _out_of_plane_direction)
           continue;
       }  
-      const Real sum_C3x3 = _Jacobian_mult[_qp].sum3x3();
-      const RealGradient sum_C3x1 = _Jacobian_mult[_qp].sum3x1();
       Real jacobian = 0.0;
 
-      // B^T_i * C * B_j
       jacobian += ElasticityTensorTools::elasticJacobian(_Jacobian_mult[_qp],
                                                          _component,
                                                          coupled_component,
-                                                         grad_test_i,
-                                                         grad_phi_j);
-
-      if (_volumetric_locking_correction)
-      {
-        // jacobian = Bbar^T_i * C * Bbar_j where Bbar = B + Bvol
-        // jacobian = B^T_i * C * B_j + Bvol^T_i * C * Bvol_j +  Bvol^T_i * C * B_j + B^T_i * C *
-        // Bvol_j
-
-        // Bvol^T_i * C * Bvol_j
-        jacobian += sum_C3x3 * (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) *
-                    (_avg_grad_phi[_j][coupled_component] - _grad_phi[_j][_qp](coupled_component)) /
-                    9.0;
-
-        // B^T_i * C * Bvol_j
-        jacobian += sum_C3x1(_component) * _grad_test[_i][_qp](_component) *
-                    (_avg_grad_phi[_j][coupled_component] - _grad_phi[_j][_qp](coupled_component)) /
-                    3.0;
-
-        // Bvol^T_i * C * B_i
-        RankTwoTensor phi;
-        for (unsigned int i = 0; i < 3; ++i)
-          phi(coupled_component, i) = _grad_phi[_j][_qp](i);
-
-        jacobian += (_Jacobian_mult[_qp] * phi).trace() *
-                    (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) / 3.0;
-      }
-      if (_use_geometric_jacobian)
-      {
-        //RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
-        Real J = _deformation_gradient[_qp].det();
-        //RankTwoTensor pk2_stress = J*(Finv*_stress[_qp]*Finv.transpose());
-        RankTwoTensor tstress = _stress[_qp]*J;
-        Real jac_geom = tstress.row(_component) * grad_phi_j;
-        jac_geom *= grad_test_i(coupled_component);
-        jacobian -= jac_geom;
-        return jacobian;
-      }
+                                                         _grad_test[_i][_qp],
+                                                         _grad_phi[_j][_qp]);
+      return jacobian;
     }
 
   return 0.0;
 }
 
-void
-Bucci2016::computeAverageGradientTest()
-{
-  // Calculate volume averaged value of shape function derivative
-  _avg_grad_test.resize(_test.size());
-  for (_i = 0; _i < _test.size(); ++_i)
-  {
-    _avg_grad_test[_i].resize(3);
-    _avg_grad_test[_i][_component] = 0.0;
-    for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
-      _avg_grad_test[_i][_component] += _grad_test[_i][_qp](_component) * _JxW[_qp] * _coord[_qp];
 
-    _avg_grad_test[_i][_component] /= _current_elem_volume;
-  }
-}
-
-void
-Bucci2016::computeAverageGradientPhi()
-{
-  // Calculate volume average derivatives for phi
-  _avg_grad_phi.resize(_phi.size());
-  for (_i = 0; _i < _phi.size(); ++_i)
-  {
-    _avg_grad_phi[_i].resize(3);
-    for (unsigned int component = 0; component < _mesh.dimension(); ++component)
-    {
-      _avg_grad_phi[_i][component] = 0.0;
-      for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
-        _avg_grad_phi[_i][component] += _grad_phi[_i][_qp](component) * _JxW[_qp] * _coord[_qp];
-
-      _avg_grad_phi[_i][component] /= _current_elem_volume;
-    }
-  }
-}
 

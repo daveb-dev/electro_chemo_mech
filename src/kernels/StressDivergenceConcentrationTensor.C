@@ -277,8 +277,8 @@ StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
         Real jac_geom = tstress.row(_component) * grad_phi_j;
         jac_geom *= grad_test_i(coupled_component);
         jacobian -= jac_geom;
-        return jacobian;
       }
+      return jacobian;
     }
 
   return 0.0;

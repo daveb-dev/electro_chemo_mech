@@ -5,20 +5,55 @@
  */
 
 /* 
- * File:   ComputeTLPkStress.cpp
+ * File:   ComputeTLNeoHookeanPkStress.cpp
  * Author: srinath
  * 
  * Created on July 24, 2018, 10:07 AM
  */
 
 #include "ComputeTLNeoHookeanPkStress.h"
+#include "ElasticityTensorTools.h"
 
-ComputeTLPkStress::ComputeTLPkStress() {
+registerMooseObject("electro_chemo_mechApp", ComputeTLNeoHookeanPkStress);
+template <>
+InputParameters
+validParams<ComputeTLNeoHookeanPkStress>()
+{
+  InputParameters params = validParams<ComputeTlFiniteStrainStress>();
+  params.addClassDescription("Computes stress based on lagrangian strain for Neo-Hookean Material");
+  return params;
 }
 
-ComputeTLPkStress::ComputeTLPkStress(const ComputeTLPkStress& orig) {
+
+
+ComputeTLNeoHookeanPkStress::ComputeTLNeoHookeanPkStress(const InputParameters & parameters)
+  : ComputeTlFiniteStrainStress(parameters)
+{
 }
 
-ComputeTLPkStress::~ComputeTLPkStress() {
+void
+ComputeTLNeoHookeanPkStress::computeQpStress()
+{
+    const RankTwoTensor II(RankTwoTensor::initIdentity);
+    const RankFourTensor I(RankFourTensor::initIdentity);
+    Real J = _deformation_gradient[_qp].det();
+    Real logJ = std::log(J);
+    Real mu0 = ElasticityTensorTools::getIsotropicShearModulus(_elasticity_tensor[_qp]);
+    Real K = ElasticityTensorTools::getIsotropicBulkModulus(_elasticity_tensor[_qp]);
+    Real lambda0 = K - 2.0*mu0/3.0;
+    RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
+    RankTwoTensor FinvT = Finv.transpose();
+    //Real mu = mu0 - lambda0*logJ;
+    RankTwoTensor B = _deformation_gradient[_qp]*_deformation_gradient[_qp].transpose();
+    
+    RankTwoTensor Pk1 = (lambda0*logJ - mu0)*FinvT + mu0*_deformation_gradient[_qp];
+    
+    _stress[_qp] = (1.0/J)*Pk1*_deformation_gradient[_qp].transpose();
+    
+    //_stress[_qp] = (lambda0*logJ*II + mu0*(B-II))/J;
+    //_Jacobian_mult[_qp] = lambda0*Cinv.outerProduct(Cinv) + mu*(Cinv.mixedProductIkJl(Cinv) + Cinv.transpose().mixedProductIlJk(Cinv));
+    //_Jacobian_mult[_qp] = lambda0*(II.outerProduct(II)) + mu0*(II.mixedProductIkJl(B) + B.mixedProductIlJk(II));
+    
+    _Jacobian_mult[_qp] = lambda0*(FinvT.outerProduct(FinvT)) - (lambda0*logJ - mu0)*(0.5*(Finv.mixedProductIkJl(Finv) + Finv.mixedProductIlJk(Finv))) + mu0*I;
 }
 
