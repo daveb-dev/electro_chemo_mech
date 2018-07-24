@@ -14,22 +14,6 @@
 #ifndef BUCCI2016_H
 #define BUCCI2016_H
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   StressDivergenceConcentrationTensor.h
- * Author: srinath
- *
- * Created on July 9, 2018, 1:51 PM
- */
-
-#ifndef STRESSDIVERGENCECONCENTRATIONTENSOR_H
-#define STRESSDIVERGENCECONCENTRATIONTENSOR_H
-
 #include "ALEKernel.h"
 #include "RankTwoTensor.h"
 #include "RankFourTensor.h"
@@ -45,7 +29,7 @@ InputParameters validParams<Bucci2016>();
 class Bucci2016 : public ALEKernel
 {
 public:
-  StressDivergenceConcentrationTensor(const InputParameters & parameters);
+  Bucci2016(const InputParameters & parameters);
   virtual void computeJacobian() override;
   virtual void computeOffDiagJacobian(MooseVariableFEBase & jvar) override;
   using Kernel::computeOffDiagJacobian;    
@@ -96,10 +80,6 @@ protected:
 private:
 
 };
-
-#endif /* STRESSDIVERGENCECONCENTRATIONTENSOR_H */
-
-
 
 #endif /* BUCCI2016_H */
 
