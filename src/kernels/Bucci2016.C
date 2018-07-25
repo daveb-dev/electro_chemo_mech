@@ -163,6 +163,10 @@ Bucci2016::computeQpOffDiagJacobian(unsigned int jvar)
                                                          coupled_component,
                                                          _grad_test[_i][_qp],
                                                          _grad_phi[_j][_qp]);
+      if (_conc_coupled && jvar == _conc_var)
+      {
+          
+      }
       return jacobian;
     }
 
