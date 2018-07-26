@@ -15,6 +15,10 @@
 #define DIFFUSIONMATERIAL_H
 
 #include "Material.h"
+#include "RankTwoTensor.h"
+#include "RankFourTensor.h"
+#include "RotationTensor.h"
+#include "DerivativeMaterialInterface.h"
 
 //Forward Declrartion
 class DiffusionMaterial;
@@ -36,8 +40,6 @@ protected:
     MaterialProperty<Real> & _lattice_misfit;
     MaterialProperty<Real> & _molar_volume;
     
-    MaterialProperty<Real> & _deformation_gradient_inelastic;
-
 };
 
 #endif /* DIFFUSIONMATERIAL_H */

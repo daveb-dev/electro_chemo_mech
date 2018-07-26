@@ -108,14 +108,13 @@ Bucci2016::computeResidual()
 Real
 Bucci2016::computeQpResidual()
 {
-    RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
-    Real J = _deformation_gradient[_qp].det();
-    RankTwoTensor FinvT = Finv.transpose();
+    RankTwoTensor Finv_elastic = _deformation_gradient[_qp].inverse();
+    Real J_elastic = _deformation_gradient[_qp].det();
+    RankTwoTensor FinvT_elastic = Finv_elastic.transpose();
     //Real mu = mu0 - lambda0*logJ;
     
-    RankTwoTensor Pk1 = J*_stress[_qp]*FinvT;
-    
-    Real residual = Pk1.row(_component)*_grad_test[_i][_qp];
+    RankTwoTensor Pk1 = J_elastic * _stress[_qp] * FinvT_elastic;
+    Real residual = Pk1.row(_component)* _grad_test[_i][_qp];
     return residual;
 }
 
