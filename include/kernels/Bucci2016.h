@@ -47,7 +47,10 @@ protected:
   const MaterialProperty<RankTwoTensor> & _stress;
   const MaterialProperty<RankFourTensor> & _Jacobian_mult;
 
-  const MaterialProperty<RankTwoTensor> &_deformation_gradient;
+  const MaterialProperty<RankTwoTensor> & _deformation_gradient;
+  const MaterialProperty<RankTwoTensor> & _deformation_gradient_diffusion;
+  const MaterialProperty<RankTwoTensor> & _dFdc;
+  
 
   const unsigned int _component;
 
