@@ -36,24 +36,16 @@ ComputeTLNeoHookeanPkStress::computeQpStress()
 {
     const RankTwoTensor II(RankTwoTensor::initIdentity);
     const RankFourTensor I(RankFourTensor::initIdentity);
-    Real J = _deformation_gradient[_qp].det();
-    Real logJ = std::log(J);
+    Real Je = _deformation_gradient[_qp].det();
+    Real logJ = std::log(Je);
     Real mu0 = ElasticityTensorTools::getIsotropicShearModulus(_elasticity_tensor[_qp]);
     Real K = ElasticityTensorTools::getIsotropicBulkModulus(_elasticity_tensor[_qp]);
     Real lambda0 = K - 2.0*mu0/3.0;
-    RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
-    RankTwoTensor FinvT = Finv.transpose();
-    //Real mu = mu0 - lambda0*logJ;
-    RankTwoTensor B = _deformation_gradient[_qp]*_deformation_gradient[_qp].transpose();
+    RankTwoTensor Finv_e = _deformation_gradient[_qp].inverse();
+    RankTwoTensor Finv_eT = Finv_e.transpose();    
+    RankTwoTensor Pk1 = (lambda0*logJ - mu0)*Finv_eT + mu0*_deformation_gradient[_qp];
     
-    RankTwoTensor Pk1 = (lambda0*logJ - mu0)*FinvT + mu0*_deformation_gradient[_qp];
-    
-    _stress[_qp] = (1.0/J)*Pk1*_deformation_gradient[_qp].transpose();
-    
-    //_stress[_qp] = (lambda0*logJ*II + mu0*(B-II))/J;
-    //_Jacobian_mult[_qp] = lambda0*Cinv.outerProduct(Cinv) + mu*(Cinv.mixedProductIkJl(Cinv) + Cinv.transpose().mixedProductIlJk(Cinv));
-    //_Jacobian_mult[_qp] = lambda0*(II.outerProduct(II)) + mu0*(II.mixedProductIkJl(B) + B.mixedProductIlJk(II));
-    
-    _Jacobian_mult[_qp] = lambda0*(FinvT.outerProduct(FinvT)) - (lambda0*logJ - mu0)*(0.5*(Finv.mixedProductIkJl(Finv) + Finv.mixedProductIlJk(Finv))) + mu0*I;
+    _stress[_qp] = (1.0/Je)*Pk1*_deformation_gradient[_qp].transpose();    
+    _Jacobian_mult[_qp] = lambda0*(Finv_eT.outerProduct(Finv_eT)) - (lambda0*logJ - mu0)*(0.5*(Finv_e.mixedProductIkJl(Finv_e) + Finv_e.mixedProductIlJk(Finv_e))) + mu0*I;
 }
 

@@ -11,8 +11,8 @@
  * Created on July 24, 2018, 10:07 AM
  */
 
-#ifndef COMPUTETLNEOHOOKEANPKSTRESS_H
-#define COMPUTETLNEOHOOKEANPKSTRESS_H
+#ifndef COMPUTETLLINEARSTRESS_H
+#define COMPUTETLLINEARPKSTRESS_H
 
 #include "ComputeTlFiniteStrainStress.h"
 

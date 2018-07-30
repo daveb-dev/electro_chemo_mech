@@ -11,8 +11,8 @@
  * Created on July 24, 2018, 9:48 AM
  */
 
-#ifndef BUCCI2016_H
-#define BUCCI2016_H
+#ifndef BOWER2012_H
+#define BOWER2012_H
 
 #include "ALEKernel.h"
 #include "RankTwoTensor.h"
