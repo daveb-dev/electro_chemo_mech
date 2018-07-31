@@ -8,15 +8,14 @@
   ymin = 0.0
   ymax = 1.0
 []
+[GlobalParams]
+  displacements = 'disp_x disp_y'
+[]
 
 [Variables]
-  [./x_disp]
-    order = FIRST
-    family =  LAGRANGE
+  [./disp_x]
   [../]
-  [./y_disp]
-    order = FIRST
-    family = LAGRANGE
+  [./disp_y]
   [../]
 []
 
@@ -44,43 +43,28 @@
   [../]
 []
 
-[Kernels]
-  [./testTensor_x]
-    type = StressDivergenceConcentrationTensor
-    variable = x_disp
-    component = 0
-    displacements = 'x_disp y_disp'
-    block = 0
-    use_displaced_mesh = false
-    use_geometric_jacobian = true
-  [../]
-  [./testTensor_y]
-    type = StressDivergenceConcentrationTensor
-    variable = y_disp
-    component = 1
-    displacements = 'x_disp y_disp'
-    block = 0
-    use_displaced_mesh = false
-    use_geometric_jacobian = true
+[Modules]
+  [./TensorMechanics]
+    [./Master]
+      [./all]
+        strain = FINITE
+        add_variables = true
+        use_displaced_mesh = true
+        use_finite_deform_jacobian = false
+        volumetric_locking_correction = true
+      [../]
+    [../]
   [../]
 []
 
 [Materials]
+  [./stress]
+    type = ComputeNeoHookeanStress
+  [../]
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
     bulk_modulus = 10.0
     shear_modulus = 1.0
-    block = 0
-  [../]
-  [./strain]
-    type = Compute2DTlFiniteStrain
-    displacements = 'x_disp y_disp'
-    out_of_plane_direction = z
-    block = 0
-  [../]
-  [./stress]
-    type = ComputeTlNeoHookeanStress
-    block = 0
   [../]
 []
 
@@ -97,13 +81,13 @@
 [BCs]
   [./bot_y]
     type = PresetBC
-    variable = y_disp
+    variable = disp_y
     boundary = bottom
     value = 0
   [../]
   [./left_x]
     type = PresetBC
-    variable = x_disp
+    variable = disp_x
     boundary = left
     value = 0
   [../]
@@ -111,28 +95,27 @@
     type = Pressure
     boundary = right
     function = rampConstant
-    variable = x_disp
+    variable = disp_x
     component = 0
     factor = -2.0
-    use_displaced_mesh = true
+    use_displaced_mesh = false
   [../]
 []
 
 [Preconditioning]
   [./SMP]
-    type = FDP
+    type = SMP
     full = true
   [../]
 []
 
 [Executioner]
   type = Transient
-  solve_type = NEWTON
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'lu'
+  solve_type = PJFNK
+
   start_time = 0.0
   dt = 0.2
-  num_steps = 5
+  #num_steps = 10
   end_time = 1.0
   nl_abs_tol = 1.0e-6
   nl_max_its = 50
@@ -143,17 +126,16 @@
     type = SideIntegralVariablePostprocessor
     boundary = right
     variable = stress_11
-    use_displaced_mesh = false
   [../]
   [./displacement_x]
     type = SideAverageValue
     boundary = right
-    variable = x_disp
+    variable = disp_x
   [../]
   [./displacement_y]
     type = SideAverageValue
     boundary = top
-    variable = y_disp
+    variable = disp_y
   [../]
 []
 [Outputs]

@@ -19,7 +19,7 @@ template <>
 InputParameters
 validParams<ComputeNeoHookeanStress>()
 {
-  InputParameters params = validParams<ComputeFiniteStrainStress>();
+  InputParameters params = validParams<ComputeFiniteStrainElasticStress>();
   params.addClassDescription("Computes stress based on lagrangian strain for Neo-Hookean Material");
   return params;
 }
@@ -27,7 +27,8 @@ validParams<ComputeNeoHookeanStress>()
 
 
 ComputeNeoHookeanStress::ComputeNeoHookeanStress(const InputParameters & parameters)
-  : ComputeFiniteStrainStress(parameters)
+  : ComputeFiniteStrainElasticStress(parameters),
+  _deformation_gradient(getMaterialProperty<RankTwoTensor>(_base_name + "deformation_gradient"))        
 {
 }
 
@@ -43,11 +44,13 @@ ComputeNeoHookeanStress::computeQpStress()
     Real lambda0 = K - 2.0*mu0/3.0;
     Real mu = mu0 - lambda0*logJ;
     
+    RankFourTensor elast = Jinv*(lambda0*II.outerProduct(II) + mu*(II.mixedProductIkJl(II) + II.mixedProductIlJk(II.transpose())));
+    
       // Calculate the stress in the intermediate configuration
   RankTwoTensor intermediate_stress;
 
   intermediate_stress =
-      _elasticity_tensor[_qp] * (_elastic_strain_old[_qp] + _strain_increment[_qp]);
+      elast * (_elastic_strain_old[_qp] + _strain_increment[_qp]);
 
   // Rotate the stress state to the current configuration
   _stress[_qp] =
@@ -57,7 +60,7 @@ ComputeNeoHookeanStress::computeQpStress()
   _elastic_strain[_qp] = _mechanical_strain[_qp];
 
   // Compute dstress_dstrain
-  _Jacobian_mult[_qp] = _elasticity_tensor[_qp]; // This is NOT the exact jacobian
+  _Jacobian_mult[_qp] = elast; // This is NOT the exact jacobian, missing the geometric part perhaps ??
     
     
     

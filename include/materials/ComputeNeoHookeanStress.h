@@ -5,33 +5,35 @@
  */
 
 /* 
- * File:   ComputeTlNeoHookeanStress.h
+ * File:   ComputeNeoHookeanStress.h
  * Author: srinath
  *
  * Created on July 9, 2018, 11:45 AM
  */
 
-#ifndef COMPUTETLNEOHOOKEANSTRESS_H
-#define COMPUTETLNEOHOOKEANSTRESS_H
+#ifndef COMPUTENEOHOOKEANSTRESS_H
+#define COMPUTENEOHOOKEANSTRESS_H
 
-#include "ComputeFiniteStrainStress.h"
+#include "ComputeFiniteStrainElasticStress.h"
 
 //Forward Declaration
-class ComputeTlNeoHookeanStress;
+class ComputeNeoHookeanStress;
 
 template <>
-InputParameters validParams<ComputeTlNeoHookeanStress>();
+InputParameters validParams<ComputeNeoHookeanStress>();
 
-class ComputeTlNeoHookeanStress : public ComputeFiniteStrainStress 
+class ComputeNeoHookeanStress : public ComputeFiniteStrainElasticStress 
 
 {
 public:
-    ComputeTlNeoHookeanStress(const InputParameters & parameters);
+    ComputeNeoHookeanStress(const InputParameters & parameters);
 protected:
     virtual void computeQpStress();
+    
+    const MaterialProperty<RankTwoTensor> & _deformation_gradient;
 private:
 
 };
 
-#endif /* COMPUTETLNEOHOOKEANSTRESS_H */
+#endif /* COMPUTENEOHOOKEANSTRESS_H */
 

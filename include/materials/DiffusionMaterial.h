@@ -36,7 +36,7 @@ protected:
     MaterialProperty<Real> & _lattice_misfit;
     MaterialProperty<Real> & _molar_volume;
     
-    MaterialProperty<Real> & _deformation_gradient_inelastic;
+//    MaterialProperty<Real> & _deformation_gradient_inelastic;
 
 };
 

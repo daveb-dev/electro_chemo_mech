@@ -117,7 +117,7 @@
     variable = x_disp
     component = 0
     factor = -2.0
-    use_displaced_mesh = true
+    use_displaced_mesh = false
   [../]
 []
 
