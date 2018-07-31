@@ -49,7 +49,7 @@ validParams<Bucci2016>()
       out_of_plane_direction,
       "The direction of the out_of_plane_strain variable used in the WeakPlaneStress kernel.");
     params.addParam<std::string>("base_name", "Material property base name");
-    params.set<bool>("use_displaced_mesh") = true;
+    params.set<bool>("use_displaced_mesh") = false;
 
     return params;
 }
@@ -60,6 +60,9 @@ Bucci2016::Bucci2016(const InputParameters& parameters)
     _stress(getMaterialPropertyByName<RankTwoTensor>(_base_name + "stress")),
     _Jacobian_mult(getMaterialPropertyByName<RankFourTensor>(_base_name + "Jacobian_mult")),
     _deformation_gradient(getMaterialPropertyByName<RankTwoTensor>(_base_name + "deformation_gradient")),
+    _deformation_gradient_diffusion
+            (getMaterialPropertyByName<RankTwoTensor>("deformation_gradient_diffusion")),
+    _dFdc(getMaterialPropertyByName<RankTwoTensor>("dFdc")),
     _component(getParam<unsigned int>("component")),
     _ndisp(coupledComponents("displacements")),
     _disp_var(_ndisp),
@@ -108,14 +111,19 @@ Bucci2016::computeResidual()
 Real
 Bucci2016::computeQpResidual()
 {
-    RankTwoTensor Finv = _deformation_gradient[_qp].inverse();
-    Real J = _deformation_gradient[_qp].det();
-    RankTwoTensor FinvT = Finv.transpose();
-    //Real mu = mu0 - lambda0*logJ;
+    RankTwoTensor Finv_elastic = _deformation_gradient[_qp].inverse();
+    Real J_elastic = _deformation_gradient[_qp].det();
+    RankTwoTensor FinvT_elastic = Finv_elastic.transpose();
+        
+    RankTwoTensor Pk1 = J_elastic * _stress[_qp] * FinvT_elastic;
     
-    RankTwoTensor Pk1 = J*_stress[_qp]*FinvT;
-    
-    Real residual = Pk1.row(_component)*_grad_test[_i][_qp];
+    if (_conc_coupled)
+    {
+        RankTwoTensor Finv_diff = _deformation_gradient_diffusion[_qp].inverse();
+        RankTwoTensor FinvT_diff = Finv_diff.transpose();
+        Pk1 *= FinvT_diff;
+    }
+    Real residual = Pk1.row(_component)* _grad_test[_i][_qp];
     return residual;
 }
 
@@ -136,7 +144,18 @@ Bucci2016::computeQpJacobian()
 {
 
   Real jacobian = 0.0;
-  jacobian += ElasticityTensorTools::elasticJacobian(_Jacobian_mult[_qp], 
+  RankFourTensor total_jacobian = _Jacobian_mult[_qp];
+  
+  if (_conc_coupled)
+  {
+    RankTwoTensor Finv_diff = _deformation_gradient_diffusion[_qp].inverse();
+    RankTwoTensor FinvT_diff = Finv_diff.transpose();
+    RankFourTensor temp = Finv_diff.outerProduct(FinvT_diff);
+    total_jacobian = total_jacobian*temp;
+  }
+  
+  
+  jacobian += ElasticityTensorTools::elasticJacobian(total_jacobian, 
                                                      _component,
                                                      _component, 
                                                      _grad_test[_i][_qp], 
@@ -158,19 +177,40 @@ Bucci2016::computeQpOffDiagJacobian(unsigned int jvar)
       }  
       Real jacobian = 0.0;
 
-      jacobian += ElasticityTensorTools::elasticJacobian(_Jacobian_mult[_qp],
-                                                         _component,
-                                                         coupled_component,
-                                                         _grad_test[_i][_qp],
-                                                         _grad_phi[_j][_qp]);
-      if (_conc_coupled && jvar == _conc_var)
+      RankFourTensor total_jacobian = _Jacobian_mult[_qp];
+  
+      if (_conc_coupled)
       {
-          
+        RankTwoTensor Finv_diff = _deformation_gradient_diffusion[_qp].inverse();
+        RankTwoTensor FinvT_diff = Finv_diff.transpose();
+        RankFourTensor temp = Finv_diff.outerProduct(FinvT_diff);
+        total_jacobian = total_jacobian*temp;
       }
-      return jacobian;
+  
+  
+      jacobian += ElasticityTensorTools::elasticJacobian(total_jacobian, 
+                                                     _component,
+                                                     coupled_component, 
+                                                     _grad_test[_i][_qp], 
+                                                     _grad_phi[_j][_qp]);
+      
+      
+      return jacobian; 
     }
-
-  return 0.0;
+  
+  if (_conc_coupled && jvar == _conc_var)
+  {
+    RankTwoTensor Finv_elastic = _deformation_gradient[_qp].inverse();
+    Real J_elastic = _deformation_gradient[_qp].det();
+    RankTwoTensor FinvT_elastic = Finv_elastic.transpose();
+      
+    RankTwoTensor Pk1 = J_elastic * _stress[_qp] * FinvT_elastic;
+    // Assume for now the Pk1 is not a function of concentration we can put this in easily later
+        
+    return (Pk1*_dFdc*_test[_i][_qp]).row(_component) * _grad_phi[_j][_qp];
+        
+  }
+    return 0.0;
 }
 
 

@@ -36,10 +36,12 @@ _stress(getMaterialPropertyByName<RankTwoTensor>("stress"))
 Real
 DiffusionKernel::computeQpResidual()
 {
-    RankTwoTensor I(RankTwoTensor::initIdentity);
-    RankTwoTensor conc_deformation_gradient = (1.0 +_lattice_misfit[_qp]*_u[_qp]/_molar_volume[_qp])*I;   
+    Real residual = 0.0;
+    return residual;
+//    RankTwoTensor I(RankTwoTensor::initIdentity);
+//    RankTwoTensor conc_deformation_gradient = (1.0 +_lattice_misfit[_qp]*_u[_qp]/_molar_volume[_qp])*I;   
 //    RankTwoTensor total_deformation_gradient = _deformation_gradient*conc_deformation_gradient;
 //    RankTwoTensor C = total_deformation_gradient.transpose()*total_deformation_gradient;
 //    RankTwoTensor Cinv = C.inverse();
-    return 0.0;
+//    RankTwoTensor 
 }
