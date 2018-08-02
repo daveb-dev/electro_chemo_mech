@@ -49,7 +49,7 @@ validParams<StressDivergenceConcentrationTensor>()
       "The direction of the out_of_plane_strain variable used in the WeakPlaneStress kernel.");
     params.addParam<bool>("use_geometric_jacobian",false,"Set to true to turn on Geometric stiffness contribution");
     params.addParam<std::string>("base_name", "Material property base name");
-    params.set<bool>("use_displaced_mesh") = true;
+    params.set<bool>("use_displaced_mesh") = false;
 
     return params;
 }
@@ -276,7 +276,7 @@ StressDivergenceConcentrationTensor::computeQpOffDiagJacobian(unsigned int jvar)
         RankTwoTensor tstress = _stress[_qp]*J;
         Real jac_geom = tstress.row(_component) * grad_phi_j;
         jac_geom *= grad_test_i(coupled_component);
-        jacobian -= jac_geom;
+        jacobian += jac_geom;
       }
       return jacobian;
     }

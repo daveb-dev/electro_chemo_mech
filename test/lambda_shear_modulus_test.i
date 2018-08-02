@@ -50,8 +50,8 @@
         strain = FINITE
         add_variables = true
         use_displaced_mesh = true
-        use_finite_deform_jacobian = false
-        volumetric_locking_correction = true
+        # use_finite_deform_jacobian = true
+        volumetric_locking_correction = false
       [../]
     [../]
   [../]
@@ -112,14 +112,12 @@
 [Executioner]
   type = Transient
   solve_type = PJFNK
-
   start_time = 0.0
   dt = 0.2
   #num_steps = 10
   end_time = 1.0
-  nl_abs_tol = 1.0e-6
+  nl_abs_tol = 1.0e-10
   nl_max_its = 50
-  l_tol = 1e-06
 []
 [Postprocessors]
   [./force]

@@ -207,7 +207,7 @@ Bucci2016::computeQpOffDiagJacobian(unsigned int jvar)
     RankTwoTensor Pk1 = J_elastic * _stress[_qp] * FinvT_elastic;
     // Assume for now the Pk1 is not a function of concentration we can put this in easily later
         
-    return (Pk1*_dFdc*_test[_i][_qp]).row(_component) * _grad_phi[_j][_qp];
+    return (Pk1*_dFdc[_qp]*_test[_i][_qp]).row(_component) * _grad_phi[_j][_qp];
         
   }
     return 0.0;

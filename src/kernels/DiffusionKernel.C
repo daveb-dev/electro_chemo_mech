@@ -28,7 +28,9 @@ DiffusionKernel::DiffusionKernel(const InputParameters& parameters)
 _mobility(getMaterialPropertyByName<Real>("mobility")),
 _lattice_misfit(getMaterialPropertyByName<Real>("lattice_misfit")),
 _molar_volume(getMaterialPropertyByName<Real>("molar_volume")),
+_max_concentration(getMaterialPropertyByName<Real>("max_concentration")),
  _deformation_gradient(getMaterialPropertyByName<RankTwoTensor>("deformation_gradient")),
+ _deformation_gradient_diffusion(getMaterialProperty<RankTwoTensor>("deformation_gradient_diffusion")),
 _stress(getMaterialPropertyByName<RankTwoTensor>("stress"))
 {
 }
@@ -37,11 +39,15 @@ Real
 DiffusionKernel::computeQpResidual()
 {
     Real residual = 0.0;
+    Real temperature = 298.0;
+    Real gas_constant = 8.314;
+    RankTwoTensor C_e = _deformation_gradient[_qp].transpose()*_deformation_gradient[_qp];
+    RankTwoTensor C = _deformation_gradient_diffusion[_qp].transpose()*C_e*_deformation_gradient_diffusion[_qp];
+    RankTwoTensor Cinv = C.inverse();
+    Real temp1 = _max_concentration[_qp]/(_max_concentration[_qp] - _u[_qp]);
+    residual =  temp1*Cinv*_grad_u[_qp]*_grad_test[_i][_qp];
+    
+    RankTwoTensor Ctemp = _lattice_misfit[_qp]*_u[_qp]/(gas_constant*temperature)*Cinv;
+    RealGradient FetP; 
     return residual;
-//    RankTwoTensor I(RankTwoTensor::initIdentity);
-//    RankTwoTensor conc_deformation_gradient = (1.0 +_lattice_misfit[_qp]*_u[_qp]/_molar_volume[_qp])*I;   
-//    RankTwoTensor total_deformation_gradient = _deformation_gradient*conc_deformation_gradient;
-//    RankTwoTensor C = total_deformation_gradient.transpose()*total_deformation_gradient;
-//    RankTwoTensor Cinv = C.inverse();
-//    RankTwoTensor 
 }

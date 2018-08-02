@@ -46,15 +46,17 @@ ComputeNeoHookeanStress::computeQpStress()
     
     RankFourTensor elast = Jinv*(lambda0*II.outerProduct(II) + mu*(II.mixedProductIkJl(II) + II.mixedProductIlJk(II.transpose())));
     
-      // Calculate the stress in the intermediate configuration
-  RankTwoTensor intermediate_stress;
-
-  intermediate_stress =
-      elast * (_elastic_strain_old[_qp] + _strain_increment[_qp]);
-
-  // Rotate the stress state to the current configuration
-  _stress[_qp] =
-      _rotation_increment[_qp] * intermediate_stress * _rotation_increment[_qp].transpose();
+//      // Calculate the stress in the intermediate configuration
+//  RankTwoTensor intermediate_stress;
+//
+//  intermediate_stress =
+//      elast * (_elastic_strain_old[_qp] + _strain_increment[_qp]);
+//
+//  // Rotate the stress state to the current configuration
+//  _stress[_qp] =
+//      _rotation_increment[_qp] * intermediate_stress * _rotation_increment[_qp].transpose();
+    RankTwoTensor B = _deformation_gradient[_qp]*_deformation_gradient[_qp].transpose();
+    _stress[_qp] = Jinv*(lambda0*logJ*II + mu0*(B-II));
 
   // Assign value for elastic strain, which is equal to the mechanical strain
   _elastic_strain[_qp] = _mechanical_strain[_qp];

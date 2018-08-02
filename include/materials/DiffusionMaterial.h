@@ -33,12 +33,16 @@ public:
     DiffusionMaterial(const InputParameters & parameters);
 protected:
     virtual void computeProerties();
+    virtual void initialSetup() override;
+
     const Real _M;
     const Real _beta;
     const Real _rhoh;
+    const Real _cmax;
     MaterialProperty<Real> & _mobility;
     MaterialProperty<Real> & _lattice_misfit;
     MaterialProperty<Real> & _molar_volume;
+    MaterialProperty<Real> & _max_concentration;
     
 };
 

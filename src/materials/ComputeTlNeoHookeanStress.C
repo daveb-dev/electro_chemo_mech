@@ -48,6 +48,6 @@ ComputeTlNeoHookeanStress::computeQpStress()
     // Material Portion of the Jacobian matrix 
     _stress[_qp] = (lambda0*logJ*II + mu0*(B-II))/J;
     //_Jacobian_mult[_qp] = lambda0*Cinv.outerProduct(Cinv) + mu*(Cinv.mixedProductIkJl(Cinv) + Cinv.transpose().mixedProductIlJk(Cinv));
-    _Jacobian_mult[_qp] = lambda0*(II.outerProduct(II)) + mu0*(II.mixedProductIkJl(B) + B.mixedProductIlJk(II));
+    _Jacobian_mult[_qp] = (lambda0*(II.outerProduct(II)) + mu0*(B.mixedProductIkJl(II) + B.mixedProductIlJk(II)));
     
 }

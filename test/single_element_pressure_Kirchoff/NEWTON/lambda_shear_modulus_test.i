@@ -114,7 +114,7 @@
     variable = x_disp
     component = 0
     factor = -2.0
-    use_displaced_mesh = true
+    use_displaced_mesh = false
   [../]
 []
 
@@ -134,9 +134,8 @@
   dt = 0.2
   num_steps = 5
   end_time = 1.0
-  nl_abs_tol = 1.0e-6
+  nl_abs_tol = 1.0e-10
   nl_max_its = 50
-  l_tol = 1e-06
 []
 [Postprocessors]
   [./force]

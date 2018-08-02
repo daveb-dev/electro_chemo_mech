@@ -34,8 +34,11 @@ protected:
     const MaterialProperty<Real> & _mobility;
     const MaterialProperty<Real> & _lattice_misfit;
     const MaterialProperty<Real> & _molar_volume;
+    const MaterialProperty<Real> & _max_concentration;
     
     const MaterialProperty<RankTwoTensor> & _deformation_gradient;
+    const MaterialProperty<RankTwoTensor> & _deformation_gradient_diffusion;
+    
     const MaterialProperty<RankTwoTensor> & _stress;
     
 };
