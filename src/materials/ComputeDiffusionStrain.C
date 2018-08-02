@@ -12,9 +12,7 @@
  */
 
 #include "ComputeDiffusionStrain.h"
-#include "MooseMesh.h"
-#include "Assembly.h"
-#include "libmesh/quadrature.h"
+#include "RankTwoTensor.h"
 
 registerMooseObject("electro_chemo_mechApp", ComputeDiffusionStrain);
 
@@ -22,16 +20,16 @@ template<>
 InputParameters 
 validParams<ComputeDiffusionStrain>()
 {
-    InputParameters params = validParams<Material>();
+    InputParameters params = validParams<ComputeEigenstrainBase>();
     params.addRequiredCoupledVar("concentration","Concentration variable") ;
     return params;
 }
 
 ComputeDiffusionStrain::ComputeDiffusionStrain(const InputParameters& parameters)
-        : DerivativeMaterialInterface<Material>(parameters),
+        : ComputeEigenstrainBase(parameters),
         _conc(coupledValue("concentration")),
         _deformation_gradient_diffusion(declareProperty<RankTwoTensor>("deformation_gradient_diffusion")),
-        _dFdc(declareProperty<RankTwoTensor>("dFdc")),
+        _dFdc(declarePropertyDerivative<RankTwoTensor>(_eigenstrain_nane,getVar("concentration",0)->name())),
         _mobility(getMaterialPropertyByName<Real>("mobility")),
         _lattice_misfit(getMaterialPropertyByName<Real>("lattice_misfit")),
         _molar_volume(getMaterialPropertyByName<Real>("molar_volume"))

@@ -19,6 +19,7 @@
 #include "RankFourTensor.h"
 #include "RotationTensor.h"
 #include "DerivativeMaterialInterface.h"
+#include "ComputeEigenstrainBase.h"
 
 //Forward Declaration
 class ComputeDiffusionStrain;
@@ -26,7 +27,7 @@ class ComputeDiffusionStrain;
 template <>
 InputParameters validParams<ComputeDiffusionStrain>();
 
-class ComputeDiffusionStrain : public DerivativeMaterialInterface<Material>
+class ComputeDiffusionStrain : public ComputeEigenstrainBase
 {
 public:
     ComputeDiffusionStrain(const InputParameters & parameters);
