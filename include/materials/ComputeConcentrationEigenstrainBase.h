@@ -22,18 +22,18 @@
 #include "ComputeEigenstrainBase.h"
 
 //Forward Declaration
-class ComputeConcentrationEigenstrainbase;
+class ComputeConcentrationEigenstrainBase;
 
 template <>
-InputParameters validParams<ComputeConcentrationEigenstrainbase>();
+InputParameters validParams<ComputeConcentrationEigenstrainBase>();
 
-class ComputeConcentrationEigenstrainbase 
+class ComputeConcentrationEigenstrainBase 
     : public DerivativeMaterialInterface<ComputeEigenstrainBase>
 {
 public:
-    ComputeConcentrationEigenstrainbase(const InputParameters & parameters);
+    ComputeConcentrationEigenstrainBase(const InputParameters & parameters);
 protected:
-    virtual void void computeQpEigenstrain() override;
+    virtual void computeQpEigenstrain() override;
 
     virtual void computeConcentrationStrain(Real & conc_strain, Real & expansion_coeff) = 0;
     

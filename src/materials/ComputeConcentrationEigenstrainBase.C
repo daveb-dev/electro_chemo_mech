@@ -19,35 +19,36 @@
 
 template<>
 InputParameters 
-validParams<ComputeConcentrationEigenstrainbase>()
+validParams<ComputeConcentrationEigenstrainBase>()
 {
     InputParameters params = validParams<ComputeEigenstrainBase>();
     params.addRequiredCoupledVar("concentration","Concentration variable") ;
     return params;
 }
 
-ComputeConcentrationEigenstrainbase::ComputeConcentrationEigenstrainbase(const InputParameters& parameters)
+ComputeConcentrationEigenstrainBase::ComputeConcentrationEigenstrainBase(const InputParameters& parameters)
         : DerivativeMaterialInterface<ComputeEigenstrainBase>(parameters),
-        _conc(coupledValue("concentration")),
-        _deigenstrain_dc(declarePropertyDerivative<RankTwoTensor>(_eigenstrain_name,getVar("concentration",0)->name())),
+        _concentration(coupledValue("concentration")),
+        _deigenstrain_dc(declarePropertyDerivative<RankTwoTensor>(_eigenstrain_name,getVar("concentration",0)->name()))
 {
     
 }        
 
 
 void
-ComputeConcentrationEigenStrainBase::computeQpEigenStrain()
+ComputeConcentrationEigenstrainBase::computeQpEigenstrain()
 {
     Real concentration_strain = 0.0;
-    Real expansion_coeff = 0.0;
+    Real partial_molar_volume = 0.0;
     
-    computeThermalStrain(concentration_strain, expansion_coeff);
+    computeConcentrationStrain(concentration_strain, partial_molar_volume);
     
     _eigenstrain[_qp].zero();
     _eigenstrain[_qp].zero();
-    _eigenstrain[_qp].addIa(thermal_strain);
+    _eigenstrain[_qp].addIa(concentration_strain);
 
+    // This is not correct 
     _deigenstrain_dc[_qp].zero();
-    _deigenstrain_dc[_qp].addIa(expansion_coeff);
+    _deigenstrain_dc[_qp].addIa(partial_molar_volume);
     
 }
