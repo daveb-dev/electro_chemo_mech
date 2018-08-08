@@ -28,7 +28,7 @@ validParams<ComputeNeoHookeanStress>()
 
 ComputeNeoHookeanStress::ComputeNeoHookeanStress(const InputParameters & parameters)
   : ComputeFiniteStrainElasticStress(parameters),
-  _deformation_gradient(getMaterialProperty<RankTwoTensor>(_base_name + "deformation_gradient"))        
+  _deformation_gradient(getMaterialProperty<RankTwoTensor>(_base_name + "deformation_gradient"))
 {
 }
 
@@ -43,19 +43,13 @@ ComputeNeoHookeanStress::computeQpStress()
     Real K = ElasticityTensorTools::getIsotropicBulkModulus(_elasticity_tensor[_qp]);
     Real lambda0 = K - 2.0*mu0/3.0;
     Real mu = mu0 - lambda0*logJ;
+    RankTwoTensor B = _deformation_gradient[_qp]*_deformation_gradient[_qp].transpose();
     
     RankFourTensor elast = Jinv*(lambda0*II.outerProduct(II) + mu*(II.mixedProductIkJl(II) + II.mixedProductIlJk(II.transpose())));
-    
-//      // Calculate the stress in the intermediate configuration
-//  RankTwoTensor intermediate_stress;
-//
-//  intermediate_stress =
-//      elast * (_elastic_strain_old[_qp] + _strain_increment[_qp]);
-//
-//  // Rotate the stress state to the current configuration
-//  _stress[_qp] =
-//      _rotation_increment[_qp] * intermediate_stress * _rotation_increment[_qp].transpose();
-    RankTwoTensor B = _deformation_gradient[_qp]*_deformation_gradient[_qp].transpose();
+    // Belytscho box 5.1 page 245 2003 edition and other paper 2016 Kim (Acta Mech)
+       
+
+    //    RankTwoTensor B = _deformation_gradient[_qp]*_deformation_gradient[_qp].transpose();
     _stress[_qp] = Jinv*(lambda0*logJ*II + mu0*(B-II));
 
   // Assign value for elastic strain, which is equal to the mechanical strain

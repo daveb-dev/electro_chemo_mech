@@ -31,6 +31,7 @@ protected:
     virtual void computeQpStress();
     
     const MaterialProperty<RankTwoTensor> & _deformation_gradient;
+    
 private:
 
 };

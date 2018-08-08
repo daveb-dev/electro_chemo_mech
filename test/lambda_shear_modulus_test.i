@@ -50,7 +50,7 @@
         strain = FINITE
         add_variables = true
         use_displaced_mesh = true
-        #use_finite_deform_jacobian = true
+        # use_finite_deform_jacobian = true
         volumetric_locking_correction = false
       [../]
     [../]
@@ -111,7 +111,7 @@
 
 [Executioner]
   type = Transient
-  solve_type = NEWTON
+  solve_type = PJFNK
   start_time = 0.0
   dt = 0.2
   #num_steps = 10
