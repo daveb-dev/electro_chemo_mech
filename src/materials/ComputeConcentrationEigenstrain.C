@@ -13,7 +13,7 @@
 
 #include "ComputeConcentrationEigenstrain.h"
 
-
+registerMooseObject("TensorMechanicsApp", ComputeConcentrationEigenstrain);
 
 template<>
 InputParameters
@@ -39,7 +39,7 @@ ComputeConcentrationEigenstrain::ComputeConcentrationEigenstrain(const InputPara
 void
 ComputeConcentrationEigenstrain::computeConcentrationStrain(Real& concentration_strain, Real& partial_molar_volume)
 {
-    Real vol_strain = 1.0 + _partial_molar_volume*_concentration[_qp];
-    concentration_strain = _partial_molar_volume/vol_strain;
-    partial_molar_volume = _partial_molar_volume;
+    Real vol_strain = 1.0 + _partial_molar_volume*(_concentration[_qp]- _stress_free_concentration[_qp]); // Beta/J_c
+    concentration_strain = _partial_molar_volume/(3.0*vol_strain)*(_concentration[_qp]- _stress_free_concentration[_qp]);
+    partial_molar_volume = _partial_molar_volume/(3.0*vol_strain);
 }        

@@ -25,7 +25,7 @@ validParams<DiffusionMaterial>()
     params.addRequiredParam<Real>("mobility","Diffusion coeffcient of intercalating species");
     params.addRequiredParam<Real>("lattice_misfit", "Lattice misfit of intercalating species (beta)");
     params.addRequiredParam<Real>("molar_volume","Molar volume of host (rho_h)");
-    params.addRequiredParam<Real>("max_concentration", "Maximum Conctration of species");
+    params.addRequiredParam<Real>("max_concentration", "Maximum Concentration of species");
     return params;
 }
 

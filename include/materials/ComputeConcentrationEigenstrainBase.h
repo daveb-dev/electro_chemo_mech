@@ -39,6 +39,7 @@ protected:
     
     const VariableValue & _concentration;   
     MaterialProperty<RankTwoTensor> & _deigenstrain_dc;
+    const VariableValue & _stress_free_concentration;
     
     
 private:

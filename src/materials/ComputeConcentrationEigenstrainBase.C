@@ -23,13 +23,17 @@ validParams<ComputeConcentrationEigenstrainBase>()
 {
     InputParameters params = validParams<ComputeEigenstrainBase>();
     params.addRequiredCoupledVar("concentration","Concentration variable") ;
+    params.addRequiredCoupledVar("stress_free_concentration",
+                                  "Reference concentration at which there is no " 
+                                  "concentration related eigenstrain");
     return params;
 }
 
 ComputeConcentrationEigenstrainBase::ComputeConcentrationEigenstrainBase(const InputParameters& parameters)
         : DerivativeMaterialInterface<ComputeEigenstrainBase>(parameters),
         _concentration(coupledValue("concentration")),
-        _deigenstrain_dc(declarePropertyDerivative<RankTwoTensor>(_eigenstrain_name,getVar("concentration",0)->name()))
+        _deigenstrain_dc(declarePropertyDerivative<RankTwoTensor>(_eigenstrain_name,getVar("concentration",0)->name())),
+        _stress_free_concentration(coupledValue("stress_free_concentration"))
 {
     
 }        
