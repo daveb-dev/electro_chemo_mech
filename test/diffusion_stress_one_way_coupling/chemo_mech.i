@@ -113,7 +113,7 @@
     type = NeumannBC
     variable = conc
     boundary = 2
-    value = 5.18e-16 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    value = 5.18e-12 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
   [../]
 
 []

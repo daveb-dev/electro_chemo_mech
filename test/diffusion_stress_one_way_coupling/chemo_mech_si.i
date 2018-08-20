@@ -1,23 +1,30 @@
 #Run with 4 procs
 [GlobalParams]
-  displacements = 'disp_x disp_y disp_z'
+  displacements = 'disp_x disp_y'
   temperature = conc
   volumetric_locking_correction = true
 []
 
 [Mesh]
-  file = cube.e
+  type = GeneratedMesh
+  dim = 2
+  nx = 100
+  ny = 50
+  xmin = 0.0
+  xmax = 30.0e-5
+  ymin = 0.0
+  ymax = 5.0e-5
 []
 
 [Variables]
   [./disp_x]
-    scaling = 1.0e8
+    # scaling = 1.0e8
   [../]
   [./disp_y]
-    scaling = 1.0e8
+    # scaling = 1.0e8
   [../]
   [./disp_z]
-    scaling = 1.0e8
+    # scaling = 1.0e8
   [../]
 
   [./conc]
@@ -90,34 +97,34 @@
   [./bottom_x]
     type = DirichletBC
     variable = disp_x
-    boundary = 1
+    boundary = bottom
     value = 0.0
   [../]
   [./bottom_y]
     type = DirichletBC
     variable = disp_y
-    boundary = 1
+    boundary = bottom
     value = 0.0
   [../]
-  [./bottom_z]
-    type = DirichletBC
-    variable = disp_z
-    boundary = 1
-    value = 0.0
-  [../]
+  # [./bottom_z]
+  #   type = DirichletBC
+  #   variable = disp_z
+  #   boundary = 1
+  #   value = 0.0
+  # [../]
 
-  [./bottom_conc]
-    type = DirichletBC
-    variable = conc
-    boundary = 2
-    value = 0.01
-  [../]
-  # [./bottom_flux]
-  #   type = NeumannBC
+  # [./bottom_conc]
+  #   type = DirichletBC
   #   variable = conc
   #   boundary = 2
-  #   value = 5.18e-12 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+  #   value = 0.01
   # [../]
+  [./bottom_flux]
+    type = NeumannBC
+    variable = conc
+    boundary = top
+    value = 5.18e-12 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+  [../]
 
 []
 
@@ -145,7 +152,7 @@
   [./heat]
     type = HeatConductionMaterial
     specific_heat = 1.0
-    thermal_conductivity = 1.0
+    thermal_conductivity = 4.0326e-13
   [../]
   [./density]
     type = GenericConstantMaterial

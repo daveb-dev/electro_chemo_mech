@@ -2,10 +2,10 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 20
-  ny = 50
+  nx = 100
+  ny = 25
   xmin = 0.0
-  xmax = 30.0e-5
+  xmax = 20.0e-5
   ymin = 0.0
   ymax = 5.0e-5
 []
@@ -46,7 +46,7 @@
   [./heat]
     type = HeatConductionMaterial
     specific_heat = 1.0
-    thermal_conductivity = 4.0362e-17 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    thermal_conductivity = 4.0362e-12 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
   [../]
   [./density]
     type = GenericConstantMaterial
