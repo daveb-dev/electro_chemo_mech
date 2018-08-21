@@ -101,5 +101,5 @@ ChemoDiffusion::computeQpOffDiagJacobian(unsigned int jvar)
   if (jvar == _mu_var)   
       return _diffusion_coefficient[_qp] * _grad_phi[_j][_qp] * _grad_test[_i][_qp];
   else
-      return computeQpJacobian();
+      return 0.0;
 }
