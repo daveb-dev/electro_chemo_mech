@@ -20,14 +20,14 @@
 
 [Kernels]
   [./diff]
-    type = HeatConduction
+    type = ChemoDiffusion
     variable = conc
+    diffusion_coefficient = mobility
     use_displaced_mesh = false
   [../]
   [./diff_t]
-    type = HeatConductionTimeDerivative
+    type = ChemoDiffusionTimeDerivative
     variable = conc
-    density_name = density
     use_displaced_mesh = false
   [../]
 []
@@ -37,16 +37,15 @@
     type = NeumannBC
     variable = conc
     boundary = bottom
-    value = 5.18e-12 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    value = 5.18e-10 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
   [../]
 
 []
 
 [Materials]
   [./heat]
-    type = HeatConductionMaterial
-    specific_heat = 1.0
-    thermal_conductivity = 4.0362e-12 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    type = DiffusionMaterial
+    mobility = 4.0362e-3 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
   [../]
   [./density]
     type = GenericConstantMaterial
