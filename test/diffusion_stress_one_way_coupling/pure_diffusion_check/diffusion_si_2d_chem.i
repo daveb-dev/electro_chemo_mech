@@ -3,9 +3,9 @@
   type = GeneratedMesh
   dim = 2
   nx = 100
-  ny = 100
+  ny = 25
   xmin = 0.0
-  xmax = 10.0e-5
+  xmax = 20.0e-5
   ymin = 0.0
   ymax = 5.0e-5
 []
@@ -13,31 +13,15 @@
 [Variables]
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e1
+    scaling = 1e3
   [../]
 []
 
-[AuxVariables]
-  [./flux]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-[]
-[AuxKernels]
-  [./flux]
-    type = DiffusionFluxAux
-    variable = flux
-    component = y
-    diffusivity = thermal_conductivity
-    diffusion_variable = conc
-  [../]
-[]
 
 [Kernels]
   [./diff]
     type = ChemoDiffusion
     variable = conc
-    diffusion_coefficient = mobility
     use_displaced_mesh = false
   [../]
   [./diff_t]
@@ -52,7 +36,8 @@
     type = NeumannBC
     variable = conc
     boundary = bottom
-    value = 5.18e-10 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    value = 5.18e-3 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    use_displaced_mesh = false
   [../]
 
 []
@@ -60,7 +45,7 @@
 [Materials]
   [./heat]
     type = DiffusionMaterial
-    mobility = 4.0362e-3 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    mobility = 0.1e-3 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
   [../]
   [./density]
     type = GenericConstantMaterial
@@ -74,22 +59,18 @@
     full = true
   [../]
 []
-
 [Executioner]
   type = Transient
   solve_type = 'LINEAR'
-  # [./TimeStepper]
-  #   type = SolutionTimeAdaptiveDT
-  #   dt = 10
-  #
-  # [../]
 
-  l_tol = 1e-30
+  nl_rel_tol = 1e-6
+  nl_abs_tol = 1e-10
+
+  l_tol = 1e-3
 
   l_max_its = 100
 
-  dtmin = 100
-
+  dt = 10.0
   end_time = 3600.0
 []
 [Debug]

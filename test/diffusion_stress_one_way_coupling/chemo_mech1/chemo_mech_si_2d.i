@@ -1,25 +1,36 @@
 #Run with 4 procs
 [GlobalParams]
-  displacements = 'disp_x disp_y disp_z'
+  displacements = 'disp_x disp_y '
   temperature = conc
   volumetric_locking_correction = true
 []
 
 [Mesh]
-  file = cube.e
+  type = GeneratedMesh
+  dim = 2
+  nx = 50
+  ny = 25
+
+  xmin = 0.0
+  xmax = 20.0
+  ymin = 0.0
+  ymax = 10.0
 []
 
 [Variables]
   [./disp_x]
+    # scaling = 1.0e8
   [../]
   [./disp_y]
+    # scaling = 1.0e8
   [../]
-  [./disp_z]
-  [../]
+  # [./disp_z]
+  #   # scaling = 1.0e8
+  # [../]
 
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e10
+    scaling = 1e6
   [../]
 []
 
@@ -33,6 +44,22 @@
     family = MONOMIAL
   [../]
   [./stress_33]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./strain_11]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./strain_22]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./strain_33]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./vol_strain]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -60,7 +87,33 @@
     index_j = 2
     index_i = 2
   [../]
-
+  [./strain_11]
+    type = RankTwoAux
+    variable = strain_11
+    rank_two_tensor = total_strain
+    index_j = 0
+    index_i = 0
+  [../]
+  [./strrain_22]
+    type = RankTwoAux
+    variable = strain_22
+    rank_two_tensor = total_strain
+    index_j = 1
+    index_i = 1
+  [../]
+  [./strain_33]
+    type = RankTwoAux
+    variable = strain_33
+    rank_two_tensor = total_strain
+    index_j = 2
+    index_i = 2
+  [../]
+  [./vol]
+    type = RankTwoScalarAux
+    rank_two_tensor = total_strain
+    variable = vol_strain
+    scalar_type = VolumetricStrain
+  [../]
 []
 
 
@@ -71,49 +124,41 @@
   [../]
 
   [./diff]
-    type = HeatConduction
+    type = ChemoDiffusion
     variable = conc
     use_displaced_mesh = false
   [../]
   [./diff_t]
-    type = HeatConductionTimeDerivative
+    type = ChemoDiffusionTimeDerivative
     variable = conc
-    density_name = density
     use_displaced_mesh = false
   [../]
 []
 
 [BCs]
   [./bottom_x]
-    type = DirichletBC
+    type = PresetBC
     variable = disp_x
-    boundary = 1
+    boundary = bottom
     value = 0.0
   [../]
   [./bottom_y]
-    type = DirichletBC
+    type = PresetBC
     variable = disp_y
-    boundary = 1
+    boundary = bottom
     value = 0.0
   [../]
-  [./bottom_z]
-    type = DirichletBC
-    variable = disp_z
-    boundary = 1
-    value = 0.0
-  [../]
-
   # [./bottom_conc]
   #   type = DirichletBC
   #   variable = conc
-  #   boundary = 1
-  #   value = 0.0
+  #   boundary = 2
+  #   value = 0.01
   # [../]
   [./bottom_flux]
     type = NeumannBC
     variable = conc
-    boundary = 2
-    value = 5.18e-12 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    boundary = top
+    value = 5.18e-5 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
   [../]
 
 []
@@ -122,7 +167,7 @@
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 0.1
-    poissons_ratio = 0.3
+    poissons_ratio = 0.26
   [../]
   [./strain]
     type = ComputeFiniteStrain
@@ -136,23 +181,24 @@
     eigenstrain_name = eigenstrain
   [../]
   [./stress]
-    type = ComputeFiniteStrainElasticStress
+    type = ComputeKirchoffStress
   [../]
 
   [./heat]
-    type = HeatConductionMaterial
-    specific_heat = 1.0
-    thermal_conductivity = 1e-6
+    type = DiffusionMaterial
+    mobility = 0.1e-3
+    activity_coefficient = 1.0
   [../]
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0' #copper in g/(cm^3)
+    prop_values = '1.0' #silicon in mol/(m^3)
   [../]
 []
 [Preconditioning]
   [./SMP]
     type = SMP
+    # full = true
   [../]
 []
 [Executioner]
@@ -160,15 +206,17 @@
   solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-6
+  # nl_abs_tol = 1e-11
 
   l_tol = 1e-3
 
   l_max_its = 100
 
-  dt = 200.0
-  end_time = 3600.0
+  dt = 200
+  end_time = 7200.0
 []
 [Debug]
+  # show_material_props = true
   show_var_residual_norms = true
 []
 [Outputs]

@@ -6,20 +6,33 @@
 []
 
 [Mesh]
-  file = cube.e
+  type = GeneratedMesh
+  dim = 3
+  nx = 50
+  ny = 25
+  nz = 5
+  xmin = 0.0
+  xmax = 20.0
+  ymin = 0.0
+  ymax = 10.0
+  zmin = 0
+  zmax = 1.0
 []
 
 [Variables]
   [./disp_x]
+    # scaling = 1.0e8
   [../]
   [./disp_y]
+    # scaling = 1.0e8
   [../]
   [./disp_z]
+    # scaling = 1.0e8
   [../]
 
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e10
+    scaling = 1e6
   [../]
 []
 
@@ -85,35 +98,35 @@
 
 [BCs]
   [./bottom_x]
-    type = DirichletBC
+    type = PresetBC
     variable = disp_x
-    boundary = 1
+    boundary = bottom
     value = 0.0
   [../]
   [./bottom_y]
-    type = DirichletBC
+    type = PresetBC
     variable = disp_y
-    boundary = 1
+    boundary = bottom
     value = 0.0
   [../]
   [./bottom_z]
-    type = DirichletBC
+    type = PresetBC
     variable = disp_z
-    boundary = 1
+    boundary = bottom
     value = 0.0
   [../]
 
   # [./bottom_conc]
   #   type = DirichletBC
   #   variable = conc
-  #   boundary = 1
-  #   value = 0.0
+  #   boundary = 2
+  #   value = 0.01
   # [../]
   [./bottom_flux]
     type = NeumannBC
     variable = conc
-    boundary = 2
-    value = 5.18e-12 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    boundary = top
+    value = 5.18e-6 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
   [../]
 
 []
@@ -122,7 +135,7 @@
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 0.1
-    poissons_ratio = 0.3
+    poissons_ratio = 0.26
   [../]
   [./strain]
     type = ComputeFiniteStrain
@@ -142,17 +155,18 @@
   [./heat]
     type = HeatConductionMaterial
     specific_heat = 1.0
-    thermal_conductivity = 1e-6
+    thermal_conductivity = 0.1e-3
   [../]
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0' #copper in g/(cm^3)
+    prop_values = '1.0' #silicon in mol/(m^3)
   [../]
 []
 [Preconditioning]
   [./SMP]
     type = SMP
+    # full = true
   [../]
 []
 [Executioner]
@@ -160,15 +174,17 @@
   solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-6
+  # nl_abs_tol = 1e-11
 
   l_tol = 1e-3
 
   l_max_its = 100
 
-  dt = 200.0
-  end_time = 3600.0
+  dt = 200
+  end_time = 5000.0
 []
 [Debug]
+  # show_material_props = true
   show_var_residual_norms = true
 []
 [Outputs]
