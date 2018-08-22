@@ -78,6 +78,8 @@ temp_print_trace.*
 *.bmp
 *.html
 *.xyz
+*.stt
+*.odb
 *Revision.h
 *.json
 *.bak

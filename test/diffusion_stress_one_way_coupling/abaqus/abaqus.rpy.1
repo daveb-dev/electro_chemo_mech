@@ -1,0 +1,54 @@
+# -*- coding: mbcs -*-
+#
+# Abaqus/CAE Release 6.13-4 replay file
+# Internal Version: 2014_01_03-20.01.58 126873
+# Run by srinath on Fri Aug 17 13:59:22 2018
+#
+
+# from driverUtils import executeOnCaeGraphicsStartup
+# executeOnCaeGraphicsStartup()
+#: Executing "onCaeGraphicsStartup()" in the site directory ...
+from abaqus import *
+from abaqusConstants import *
+session.Viewport(name='Viewport: 1', origin=(0.0, 0.0), width=488.416046142578, 
+    height=246.524993896484)
+session.viewports['Viewport: 1'].makeCurrent()
+session.viewports['Viewport: 1'].maximize()
+from caeModules import *
+from driverUtils import executeOnCaeStartup
+executeOnCaeStartup()
+session.viewports['Viewport: 1'].partDisplay.geometryOptions.setValues(
+    referenceRepresentation=ON)
+o1 = session.openOdb(
+    name='/new/home1/srinath/github/electro_chemo_mech/test/diffusion_stress_one_way_coupling/abaqus/ht2_nondim.odb')
+session.viewports['Viewport: 1'].setValues(displayedObject=o1)
+#: Model: /new/home1/srinath/github/electro_chemo_mech/test/diffusion_stress_one_way_coupling/abaqus/ht2_nondim.odb
+#: Number of Assemblies:         1
+#: Number of Assembly instances: 0
+#: Number of Part instances:     1
+#: Number of Meshes:             1
+#: Number of Element Sets:       3
+#: Number of Node Sets:          3
+#: Number of Steps:              1
+session.viewports['Viewport: 1'].odbDisplay.display.setValues(plotState=(
+    CONTOURS_ON_DEF, ))
+session.viewports['Viewport: 1'].view.setValues(nearPlane=0.00068481, 
+    farPlane=0.00103566, width=0.00029852, height=0.000164334, 
+    viewOffsetX=-1.22487e-06, viewOffsetY=-2.5593e-07)
+session.viewports['Viewport: 1'].odbDisplay.setPrimaryVariable(
+    variableLabel='NT11', outputPosition=NODAL, )
+session.viewports['Viewport: 1'].view.setValues(nearPlane=0.000682948, 
+    farPlane=0.00103752, width=0.000309984, height=0.000170644, 
+    viewOffsetX=1.34239e-06, viewOffsetY=-1.19032e-06)
+session.viewports['Viewport: 1'].odbDisplay.setPrimaryVariable(
+    variableLabel='HFL', outputPosition=INTEGRATION_POINT, refinement=(
+    INVARIANT, 'Magnitude'), )
+session.viewports['Viewport: 1'].view.setValues(nearPlane=0.000681433, 
+    farPlane=0.00103903, width=0.000328622, height=0.000180905, 
+    viewOffsetX=1.82493e-06, viewOffsetY=-6.92748e-07)
+session.viewports['Viewport: 1'].odbDisplay.setFrame(step=0, frame=10 )
+session.viewports['Viewport: 1'].odbDisplay.setPrimaryVariable(
+    variableLabel='NT11', outputPosition=NODAL, )
+#: Warning: The output database '/new/home1/srinath/github/electro_chemo_mech/test/diffusion_stress_one_way_coupling/abaqus/ht2_nondim.odb' disk file has changed.
+#: 
+#: The current plot operation has been canceled, re-open the file to view the results

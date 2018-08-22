@@ -1,0 +1,77 @@
+# -*- coding: mbcs -*-
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=200.0)
+mdb.models['Model-1'].sketches['__profile__'].rectangle(point1=(0.0, 0.0), 
+    point2=(0.0003, 5e-05))
+mdb.models['Model-1'].Part(dimensionality=TWO_D_PLANAR, name='Part-1', type=
+    DEFORMABLE_BODY)
+mdb.models['Model-1'].parts['Part-1'].BaseShell(sketch=
+    mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].Material(name='Material-1')
+mdb.models['Model-1'].materials['Material-1'].Diffusivity(law=FICK, table=((
+    1e-15, 0.0), ))
+mdb.models['Model-1'].HomogeneousSolidSection(material='Material-1', name=
+    'Section-1', thickness=None)
+mdb.models['Model-1'].parts['Part-1'].Set(faces=
+    mdb.models['Model-1'].parts['Part-1'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-1')
+mdb.models['Model-1'].parts['Part-1'].SectionAssignment(offset=0.0, 
+    offsetField='', offsetType=MIDDLE_SURFACE, region=
+    mdb.models['Model-1'].parts['Part-1'].sets['Set-1'], sectionName=
+    'Section-1', thicknessAssignment=FROM_SECTION)
+mdb.models['Model-1'].rootAssembly.DatumCsysByDefault(CARTESIAN)
+mdb.models['Model-1'].rootAssembly.Instance(dependent=OFF, name='Part-1-1', 
+    part=mdb.models['Model-1'].parts['Part-1'])
+mdb.models['Model-1'].MassDiffusionStep(maxNumInc=10, name='Step-1', previous=
+    'Initial', timeIncrementationMethod=FIXED)
+mdb.models['Model-1'].rootAssembly.Surface(name='Surf-1', side1Edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#1 ]', ), ))
+mdb.models['Model-1'].SurfaceConcentrationFlux(createStepName='Step-1', 
+    magnitude=1e-06, name='Load-1', region=
+    mdb.models['Model-1'].rootAssembly.surfaces['Surf-1'])
+# Save by srinath on 2018_08_17-14.25.23; build 6.13-4 2014_01_03-20.01.58 126873
+# Save by srinath on 2018_08_17-14.25.26; build 6.13-4 2014_01_03-20.01.58 126873
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].rootAssembly.setElementType(elemTypes=(ElemType(
+    elemCode=DCC2D4, elemLibrary=STANDARD), ElemType(elemCode=DC2D3, 
+    elemLibrary=STANDARD)), regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ), ))
+mdb.models['Model-1'].rootAssembly.seedEdgeByNumber(constraint=FINER, edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#5 ]', ), ), number=20)
+mdb.models['Model-1'].rootAssembly.seedEdgeByNumber(constraint=FINER, edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#a ]', ), ), number=50)
+mdb.models['Model-1'].rootAssembly.seedEdgeByNumber(constraint=FINER, edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#5 ]', ), ), number=100)
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+# Save by srinath on 2018_08_17-14.29.33; build 6.13-4 2014_01_03-20.01.58 126873

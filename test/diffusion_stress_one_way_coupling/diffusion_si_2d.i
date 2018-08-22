@@ -3,9 +3,9 @@
   type = GeneratedMesh
   dim = 2
   nx = 20
-  ny = 50
+  ny = 100
   xmin = 0.0
-  xmax = 30.0e-5
+  xmax = 10.0e-5
   ymin = 0.0
   ymax = 5.0e-5
 []
@@ -13,10 +13,25 @@
 [Variables]
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e15
+    scaling = 1e1
   [../]
 []
 
+[AuxVariables]
+  [./flux]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+[]
+[AuxKernels]
+  [./flux]
+    type = DiffusionFluxAux
+    variable = flux
+    component = y
+    diffusivity = thermal_conductivity
+    diffusion_variable = conc
+  [../]
+[]
 
 [Kernels]
   [./diff]
@@ -60,18 +75,22 @@
     full = true
   [../]
 []
+
 [Executioner]
   type = Transient
-  solve_type = 'PJFNK'
+  solve_type = 'LINEAR'
+  # [./TimeStepper]
+  #   type = SolutionTimeAdaptiveDT
+  #   dt = 10
+  #
+  # [../]
 
-  # nl_rel_tol = 1e-20
-  # nl_abs_tol = 1e-15
-
-  # l_tol = 1e-3
+  l_tol = 1e-30
 
   l_max_its = 100
 
-  dt = 10.0
+  dtmin = 100
+
   end_time = 3600.0
 []
 [Debug]
