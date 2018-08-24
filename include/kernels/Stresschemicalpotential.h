@@ -33,7 +33,7 @@ public:
 protected:
     virtual Real computeQpResidual();
     virtual Real computeQpJacobian();
-//    virtual Real Real computeQpOffDiagJacobian(unsigned int) override;
+    virtual Real computeQpOffDiagJacobian(unsigned int jvar) override;
 
 
     std::string _base_name;
@@ -45,7 +45,8 @@ protected:
 //    const MaterialProperty<RankTwoTensor> * _deformation_gradient;
 //    const MaterialProperty<RankTwoTensor> * _deformation_gradient_old;
 
-
+    const unsigned int _chem_var;
+    
     const unsigned int _component;
     //Coupled Displacement variables
     unsigned int _ndisp;
@@ -56,6 +57,7 @@ protected:
 
     /// d(strain)/d(concentration), if computed by ComputeConcentrationEigenstrain
    const MaterialProperty<RankTwoTensor> * const _deigenstrain_dC;
+   const MaterialProperty<Real> & _density;
     
 private:
 

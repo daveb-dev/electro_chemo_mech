@@ -28,7 +28,7 @@
     type = DiffusionFluxAux
     variable = flux
     component = y
-    diffusivity = thermal_conductivity
+    diffusivity = mobility
     diffusion_variable = conc
   [../]
 []
@@ -51,8 +51,11 @@
   [./bottom_flux]
     type = NeumannBC
     variable = conc
-    boundary = bottom
-    value = 5.18e-10 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    boundary = top
+    value = 1.524e-7 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    # This is actual current divided by the density for 0.012 A/m^2
+    # Molar density of 7.874e4 mol/m^3
+    use_displaced_mesh = false
   [../]
 
 []
@@ -60,7 +63,7 @@
 [Materials]
   [./heat]
     type = DiffusionMaterial
-    mobility = 4.0362e-3 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    mobility = 1e-13 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
   [../]
   [./density]
     type = GenericConstantMaterial
@@ -78,19 +81,21 @@
 [Executioner]
   type = Transient
   solve_type = 'LINEAR'
+  compute_initial_residual_before_preset_bcs = true
   # [./TimeStepper]
   #   type = SolutionTimeAdaptiveDT
   #   dt = 10
   #
   # [../]
 
-  l_tol = 1e-30
-
+  # l_tol = 1e-30
+  petsc_options_iname = '-pc_type'
+  petsc_options_value = 'lu'
+  l_tol = 1e-05
   l_max_its = 100
 
-  dtmin = 100
-
-  end_time = 3600.0
+  dt = 200
+  end_time = 14400
 []
 [Debug]
   show_material_props = true

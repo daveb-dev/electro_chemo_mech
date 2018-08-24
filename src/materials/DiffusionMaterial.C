@@ -52,8 +52,8 @@ DiffusionMaterial::DiffusionMaterial(const InputParameters& parameters)
   _beta(isParamValid("lattice_misfit") ? getParam<Real>("lattice_misfit") : 0),
   _rhoh(isParamValid("molar_volume") ? getParam<Real>("molar_volume") : 0),
   _cmax(isParamValid("max_concentration") ? getParam<Real>("max_concentration") : 1.0), 
-  _R(isParamValid("gas_constant") ? getParam<Real>("gas_constant") : 8.314),
-  _temp(isParamValid("temperature") ? getParam<Real>("temperature") : 298),
+  _R(isParamValid("gas_constant") ? getParam<Real>("gas_constant") : 1.0),
+  _temp(isParamValid("temperature") ? getParam<Real>("temperature") : 1.0),
   _mobility(declareProperty<Real>("mobility")),
   _mobility_dC(declareProperty<Real>("mobility_dC")),
   _mobility_concentration_function(
@@ -124,7 +124,7 @@ DiffusionMaterial::computeProperties()
     }
     else
     {
-      _mobility[qp] = _M/(_R * _temp);
+      _mobility[qp] = _M/(_R * _temp); // Actually Represents diffusion coefficient
       _mobility_dC[qp] = 0;
     }
 

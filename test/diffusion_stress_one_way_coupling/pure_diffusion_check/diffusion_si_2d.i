@@ -2,12 +2,12 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 100
+  nx = 25
   ny = 25
   xmin = 0.0
-  xmax = 20.0e-5
+  xmax = 20.0e-6
   ymin = 0.0
-  ymax = 5.0e-5
+  ymax = 0.2e-6
 []
 
 [Variables]
@@ -16,12 +16,28 @@
     scaling = 1e3
   [../]
 []
+[AuxVariables]
+  [./flux]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+[]
 
+[AuxKernels]
+  [./flux]
+    type = DiffusionFluxAux
+    variable = flux
+    component = y
+    diffusivity = thermal_conductivity
+    diffusion_variable = conc
+  [../]
+[]
 
 [Kernels]
   [./diff]
     type = HeatConduction
     variable = conc
+    diffusion_coefficient = thermal_conductivity
     use_displaced_mesh = false
   [../]
   [./diff_t]
@@ -35,8 +51,8 @@
   [./bottom_flux]
     type = NeumannBC
     variable = conc
-    boundary = bottom
-    value = 5.18e-3 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    boundary = top
+    value = 1.524e-7 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
   [../]
 
 []
@@ -44,7 +60,7 @@
 [Materials]
   [./heat]
     type = HeatConductionMaterial
-    thermal_conductivity = 0.1e-3 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    thermal_conductivity = 0.1e-12 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
     specific_heat = 1.0
   [../]
   [./density]
@@ -70,7 +86,7 @@
 
   l_max_its = 100
 
-  dt = 10.0
+  dt = 200
   end_time = 3600.0
 []
 [Debug]

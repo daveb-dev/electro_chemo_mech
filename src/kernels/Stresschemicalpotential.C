@@ -36,7 +36,7 @@ validParams<Stresschemicalpotential>()
                                         "1 for y, 2 for z)");
     params.addRequiredCoupledVar("displacements",
                                "The string of displacements suitable for the problem statement");
-    params.addCoupledVar("concentration",
+    params.addRequiredCoupledVar("concentration",
                         "The name of the concentration variable used in"
                         "ComputeConcentrationEigenstrain");
     params.addParam<std::string>(
@@ -53,6 +53,7 @@ Stresschemicalpotential::Stresschemicalpotential(const InputParameters & paramet
         _stress(getMaterialPropertyByName<RankTwoTensor>(_base_name + "stress")),
         _stress_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + "stress")),
         _Jacobian_mult_elastic(getMaterialPropertyByName<RankFourTensor>(_base_name + "Jacobian_mult")),
+        _chem_var(coupled("chemical_potential")),
         _component(getParam<unsigned int>("component")),
         _ndisp(coupledComponents("displacements")),
         _disp_var(_ndisp),
@@ -61,7 +62,8 @@ Stresschemicalpotential::Stresschemicalpotential(const InputParameters & paramet
         _deigenstrain_dC(_conc_coupled ? &getMaterialPropertyDerivative<RankTwoTensor>(
                                          getParam<std::string>("concentration_eigenstrain_name"),
                                          getVar("concentration", 0)->name())
-                                   : nullptr)
+                                   : nullptr),
+        _density(getMaterialProperty<Real>("density"))
 
 {
       for (unsigned int i = 0; i < _ndisp; ++i)
@@ -71,7 +73,7 @@ Stresschemicalpotential::Stresschemicalpotential(const InputParameters & paramet
 Real 
 Stresschemicalpotential::computeQpResidual()
 {
-    return _u[_qp] + _stress[_qp].doubleContraction((*_deigenstrain_dC)[_qp])*_test[_i][_qp];
+    return (_u[_qp] + _density[_qp]*_stress[_qp].doubleContraction((*_deigenstrain_dC)[_qp]))*_test[_i][_qp];
     
     return 0.0;
 }
@@ -79,7 +81,30 @@ Stresschemicalpotential::computeQpResidual()
 Real
 Stresschemicalpotential::computeQpJacobian()
 {
-    return _phi[_j][_qp] * _test[_i][_qp];
+    return _test[_i][_qp]*_phi[_j][_qp] ;
 }
 
+Real
+Stresschemicalpotential::computeQpOffDiagJacobian(unsigned int jvar)
+{
+    if (jvar != _chem_var)
+    {
+        if (jvar == _conc_var)
+        {
+            
+        } else
+        {
+            for (unsigned int coupled_component = 0; coupled_component < _ndisp; ++ coupled_component)
+            {
+                if (jvar == _disp_var[coupled_component])
+                {
+                    const RealGradient  sum_C3x1 = _Jacobian_mult_elastic[_qp].sum3x1();
+                   
+                }
+            }
+        }
+//        return 0.0;
+    }
+    return 0.0;
+}
 // Todo implement off diagonal terms
