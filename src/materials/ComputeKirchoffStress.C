@@ -53,6 +53,7 @@ ComputeKirchoffStress::initQpStatefulProperties()
 void
 ComputeKirchoffStress::computeQpStress()
 {
+    const RankTwoTensor I(RankTwoTensor::initIdentity);
     Real J = _deformation_gradient[_qp].det();
     Real Jinv = 1.0/J;
     ComputeFiniteStrainElasticStress::computeQpStress();
@@ -60,6 +61,11 @@ ComputeKirchoffStress::computeQpStress()
     _kirchoff_stress[_qp] = _stress[_qp];
     
     _stress[_qp] *= Jinv;
+    RankFourTensor jj = 0.5*(I.mixedProductIkJl(_stress[_qp]) + 
+                             I.mixedProductIlJk(_stress[_qp]) + 
+                             I.mixedProductJkIl(_stress[_qp]) + 
+                             _stress[_qp].mixedProductIkJl(I));
     _Jacobian_mult[_qp] *= Jinv;
+    _Jacobian_mult[_qp] -= jj;
 }
 
