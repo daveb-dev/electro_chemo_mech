@@ -73,7 +73,7 @@ Stresschemicalpotential::Stresschemicalpotential(const InputParameters & paramet
 Real 
 Stresschemicalpotential::computeQpResidual()
 {
-    return (_u[_qp] + _density[_qp]*_stress[_qp].doubleContraction((*_deigenstrain_dC)[_qp]))*_test[_i][_qp];
+    return (_density[_qp]*_u[_qp] + _stress[_qp].doubleContraction((*_deigenstrain_dC)[_qp]))*_test[_i][_qp];
     
     return 0.0;
 }
@@ -81,7 +81,7 @@ Stresschemicalpotential::computeQpResidual()
 Real
 Stresschemicalpotential::computeQpJacobian()
 {
-    return _test[_i][_qp]*_phi[_j][_qp] ;
+    return _density[_qp]*_test[_i][_qp]*_phi[_j][_qp] ;
 }
 
 Real
