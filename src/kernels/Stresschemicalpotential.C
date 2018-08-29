@@ -98,9 +98,10 @@ Stresschemicalpotential::computeQpOffDiagJacobian(unsigned int jvar)
     if (jvar == _conc_var)
     {
 //        return -dstress_dc.trace() * _phi[_j][_qp] * _test[_i][_qp]/_density[_qp]/3.0;
-        if (fabs(_concentration[_qp]) > 1.0e-8 )
+        Real deltac = (_concentration[_qp] - _concentration_old[_qp]);
+        if (fabs(deltac) > 1.0e-8 )
         {
-            Real resid = ((_stress[_qp] - _stress_old[_qp]).trace())/(_concentration[_qp] - _concentration_old[_qp])
+            Real resid = ((_stress[_qp] - _stress_old[_qp]).trace())/deltac
                     *((*_deigenstrain_dC)[_qp]).trace()/3.0;
             resid *= _phi[_j][_qp] * _test[_i][_qp];
             return -resid;

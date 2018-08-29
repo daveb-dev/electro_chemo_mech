@@ -240,7 +240,7 @@
 
 [Executioner]
   type = Transient
-  solve_type = 'PJFNK'
+  solve_type = 'NEWTON'
 
   nl_rel_tol = 1e-6
   nl_abs_tol = 1e-8
