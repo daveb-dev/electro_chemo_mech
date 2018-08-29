@@ -115,7 +115,7 @@ Stresschemicalpotential::computeQpOffDiagJacobian(unsigned int jvar)
         {
             if (jvar == _disp_var[coupled_component])
             {
-                const RealGradient  sum_C3x1 = _Jacobian_mult_elastic[_qp].sum3x1();
+                return (_Jacobian_mult_elastic[_qp]*((*_deigenstrain_dC)[_qp])*_grad_test[_j][_qp])(_component)*_phi[_i][_qp];
 
             }
         }
