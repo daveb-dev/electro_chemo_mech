@@ -20,10 +20,10 @@
 
   [./conc]
     initial_condition = 1.0
-    # scaling = 1e-3
+    scaling = 1e-2
   [../]
   [./mu_m]
-    # scaling = 1e3
+    scaling = 1e-3
   [../]
 []
 [Functions]
@@ -75,7 +75,7 @@
     type = DiffusionFluxAux
     variable = flux
     component = y
-    diffusivity = mobility
+    diffusivity = diffusion_coefficient
     diffusion_variable = conc
   [../]
   [./stress_11]
@@ -142,9 +142,9 @@
     type = ChemoDiffusion
     variable = conc
     stress_based_chemical_potential = mu_m
-    diffusion_coefficient = mobility
+    diffusion_coefficient = diffusion_coefficient
     use_displaced_mesh = false
-    block = 'inner'
+    # block = 'inner'
   [../]
 
   [./diff_t]
@@ -209,38 +209,6 @@
     value = 1.0
     boundary = 'top left bot right'
   [../]
-  # [./bottom_flux]
-  #   type = NeumannBC
-  #   variable = conc
-  #   boundary = top
-  #   value = -1.524e-3 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
-  #   # This is actual current divided by the density for 0.012 A/m^2
-  #   # Molar density of 7.874e4 mol/m^3
-  # [../]
-  # [./right_flux]
-  #   type = NeumannBC
-  #   variable = conc
-  #   boundary = right
-  #   value = -1.524e-3 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
-  #   # This is actual current divided by the density for 0.012 A/m^2
-  #   # Molar density of 7.874e4 mol/m^3
-  # [../]
-  # [./left_flux]
-  #   type = NeumannBC
-  #   variable = conc
-  #   boundary = left
-  #   value = -1.524e-3 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
-  #   # This is actual current divided by the density for 0.012 A/m^2
-  #   # Molar density of 7.874e4 mol/m^3
-  # [../]
-  # [./top_flux]
-  #   type = NeumannBC
-  #   variable = conc
-  #   boundary = bot
-  #   value = -1.524e-3 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
-  #   # This is actual current divided by the density for 0.012 A/m^2
-  #   # Molar density of 7.874e4 mol/m^3
-  # [../]
   [./bottom_x]
     type = PresetBC
     variable = disp_x
@@ -259,28 +227,28 @@
 [Materials]
   [./heat_inner]
     type = DiffusionMaterial
-    mobility = 5.0e-4 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
-    gas_constant = 1.0
-    temperature = 1.0
+    diffusion_coefficient = 5.0e-4 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    gas_constant = 8.314e-6
+    temperature = 298
     block = 'inner'
   [../]
   [./heat_outer]
     type = DiffusionMaterial
-    mobility = 1.0
-    gas_constant = 1.0
-    temperature = 1.0
+    diffusion_coefficient =  1.0
+    gas_constant = 8.314e-6
+    temperature = 298
     block = 'outer'
   [../]
   [./density_inner]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0' #silicon in mol/(um^3)
+    prop_values = '4.9e-6' #silicon in mol/(um^3)
     block = 'inner'
   [../]
   [./density_outer]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0' #silicon in mol/(m^3)
+    prop_values = '4.9e-6' #silicon in mol/(m^3)
     block = 'outer'
   [../]
   [./elasticity_tensor_inner]
@@ -342,7 +310,7 @@
   solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-9
+  nl_abs_tol = 1e-7
   l_tol = 1e-3
 
   l_max_its = 50

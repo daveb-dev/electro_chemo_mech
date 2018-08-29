@@ -25,8 +25,8 @@ validParams<DiffusionMaterial>()
     InputParameters params = validParams<Material>();
     params.addCoupledVar("concentration", "Coupled Concentration");
     
-    params.addRequiredParam<Real>("mobility","Diffusion coeffcient of intercalating species");
-    params.addParam<FunctionName>("mobility_concentration_function",
+    params.addRequiredParam<Real>("diffusion_coefficient","Diffusion coeffcient of intercalating species");
+    params.addParam<FunctionName>("diffusion_coefficient_concentration_function",
                                   "",
                                   "Diffusion coefficient as a function of concentration");
     params.addParam<Real>("activity_coefficient", "Activity coefficient in chemical potenttial");
@@ -47,18 +47,19 @@ DiffusionMaterial::DiffusionMaterial(const InputParameters& parameters)
 : Material(parameters),
   _has_conc(isCoupled("concentration")),
   _concentration(_has_conc ? coupledValue("concentration") : _zero),  
-  _M(isParamValid("mobility") ? getParam<Real>("mobility") : 0),
+  _M(isParamValid("diffusion_coefficient") ? getParam<Real>("diffusion_coefficient") : 0),
   _gamma(isParamValid("activity_coefficient") ? getParam<Real>("activity_coefficient") : 1.0),  
   _beta(isParamValid("lattice_misfit") ? getParam<Real>("lattice_misfit") : 0),
   _rhoh(isParamValid("molar_volume") ? getParam<Real>("molar_volume") : 0),
   _cmax(isParamValid("max_concentration") ? getParam<Real>("max_concentration") : 1.0), 
   _R(isParamValid("gas_constant") ? getParam<Real>("gas_constant") : 1.0),
   _temp(isParamValid("temperature") ? getParam<Real>("temperature") : 1.0),
+  _diffusion_coefficient(declareProperty<Real>("diffusion_coefficient")),
   _mobility(declareProperty<Real>("mobility")),
-  _mobility_dC(declareProperty<Real>("mobility_dC")),
-  _mobility_concentration_function(
-        getParam<FunctionName>("mobility_concentration_function") != ""
-            ? &getFunction("mobility_concentration_function")
+  _diffusion_coefficient_dC(declareProperty<Real>("diffusion_coefficient_dC")),
+  _diffusion_coefficient_concentration_function(
+        getParam<FunctionName>("diffusion_coefficient_concentration_function") != ""
+            ? &getFunction("diffusion_coefficient_concentration_function")
             : NULL),
   _activity_coefficient(declareProperty<Real>("activity_coefficient")),
   _activity_coefficient_dC(declareProperty<Real>("activity_coefficient_dC")),
@@ -70,11 +71,11 @@ DiffusionMaterial::DiffusionMaterial(const InputParameters& parameters)
   _molar_volume(declareProperty<Real>("molar_volume")),
   _max_concentration(declareProperty<Real>("max_concentration"))
 {
-    if (_mobility_concentration_function && !_has_conc)
+    if (_diffusion_coefficient_concentration_function && !_has_conc)
     {
         mooseError("Must couple with concentration if using diffusivity function");
     }
-    if (isParamValid("mobility") && _mobility_concentration_function)
+    if (isParamValid("diffusion_coefficient") && _diffusion_coefficient_concentration_function)
     {
         mooseError(
         "Cannot define both diffusion coefficient and diffusivity concentration function");
@@ -114,18 +115,19 @@ DiffusionMaterial::computeProperties()
 //        qp_concentration = 0;
 //      }
     }
-    if (_mobility_concentration_function)
+    if (_diffusion_coefficient_concentration_function)
     {
       Point p;
-      _mobility[qp] =
-          _mobility_concentration_function->value(qp_concentration, p)/(_R *_temp);
-      _mobility_dC[qp] =
-          _mobility_concentration_function->timeDerivative(qp_concentration, p)/(_R *_temp);
+      _diffusion_coefficient[qp] =
+          _diffusion_coefficient_concentration_function->value(qp_concentration, p);
+      _mobility[_qp] = _diffusion_coefficient[_qp]/(_R*_temp);
+      _diffusion_coefficient_dC[qp] =
+          _diffusion_coefficient_concentration_function->timeDerivative(qp_concentration, p);
     }
     else
     {
       _mobility[qp] = _M/(_R * _temp); // Actually Represents diffusion coefficient
-      _mobility_dC[qp] = 0;
+      _diffusion_coefficient_dC[qp] = 0;
     }
 
     if ( _actitivity_coefficient_concentration_function)

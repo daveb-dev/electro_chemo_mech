@@ -37,10 +37,14 @@ protected:
     const unsigned int _mu_var;
     
 private:
+    
     const MaterialProperty<Real> & _diffusion_coefficient;
     const MaterialProperty<Real> * const _diffusion_coefficient_dC;
     const MaterialProperty<Real> & _activity_coefficient;
     const MaterialProperty<Real> * const _activity_coefficient_dC;
+    const MaterialProperty<Real> & _mobility;
+    const VariableGradient * _grad_mu;
+    
 };
 
 #endif /* CHEMODIFFUSION_H */

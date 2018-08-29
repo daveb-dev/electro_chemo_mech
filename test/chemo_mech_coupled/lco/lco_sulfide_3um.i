@@ -144,7 +144,7 @@
     stress_based_chemical_potential = mu_m
     diffusion_coefficient = mobility
     use_displaced_mesh = false
-    block = 'inner'
+    # block = 'inner'
   [../]
 
   [./diff_t]

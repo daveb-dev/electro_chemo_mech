@@ -21,14 +21,14 @@ validParams<ChemoDiffusion>()
 {
     InputParameters params = validParams<Diffusion>();
     params.addClassDescription(
-            "Computes residual/Jacobian for TBD");
+            "Computes residual/Jacobian for Diffusion and for a stress based chemical potential");
     params.addCoupledVar("stress_based_chemical_potential", 
                           "Name of the variable for the stress_based_chemical_potential");
     params.addParam<MaterialPropertyName>("diffusion_coefficient",
-                                           "mobility",
-                                          "Property name for diffusivity/mobility");
+                                           "diffusion_coefficient",
+                                          "Property name for diffusivity/diffusion_coefficient");
     params.addParam<MaterialPropertyName>("diffusion_coefficient_dC",
-                                          "mobility_dC"
+                                          "diffusion_coefficient_dC"
                                           "Property name for derivative of diffusivity with respect"
                                           "to concentration ");
     params.addParam<MaterialPropertyName>("activity_coefficient",
@@ -52,23 +52,27 @@ ChemoDiffusion::ChemoDiffusion(const InputParameters & parameters)
         _activity_coefficient(getMaterialProperty<Real>("activity_coefficient")),
         _activity_coefficient_dC(hasMaterialProperty<Real>("activity_coefficient_dC")
                                   ? &getMaterialProperty<Real>("activity_coefficient_dC")
-                                  : NULL)
+                                  : NULL),
+        _mobility(getMaterialProperty<Real>("mobility"))
 
 {
-    
+    if (_mu_coupled)
+        _grad_mu = &coupledGradient("stress_based_chemical_potential");
 }
 
 Real
 ChemoDiffusion::computeQpResidual()
 {
     Real residual = _diffusion_coefficient[_qp]*Diffusion::computeQpResidual();
-//    if (_activity_coefficient_dC) {
-//        
+    if (_mu_coupled)
+        residual += _mobility[_qp] * _u[_qp] * (*_grad_mu)[_qp] * _grad_test[_i][_qp];
+    if (_activity_coefficient_dC) {
+        
 //        Real dgamma = (*_activity_coefficient_dC)[_qp];
 //        Real R = _diffusion_coefficient[_qp] * (_u[_qp]/_activity_coefficient[_qp]) * 
 //                dgamma * _grad_test[_i][_qp] ; 
-//        residual += R;
-//    }
+        residual += 0.0;
+    }
     return residual;
 }
 
@@ -91,6 +95,8 @@ ChemoDiffusion::computeQpJacobian()
       jac += dgamma * (1.0 - c/gamma * dgamma)/gamma 
               * _phi[_j][_qp]*_grad_u[_qp]*_grad_test[_i][_qp];
   }
+  if (_mu_var)
+      jac += _phi[_j][_qp]*(*_grad_mu)[_qp]*_grad_test[_i][_qp];
   
   return jac;
 }
@@ -99,7 +105,7 @@ Real
 ChemoDiffusion::computeQpOffDiagJacobian(unsigned int jvar)
 {
   if (jvar == _mu_var)   
-      return _diffusion_coefficient[_qp] * _grad_phi[_j][_qp] * _grad_test[_i][_qp];
+      return _mobility[_qp] * _u[_qp] * _grad_phi[_j][_qp] * _grad_test[_i][_qp];
   else
       return 0.0;
 }

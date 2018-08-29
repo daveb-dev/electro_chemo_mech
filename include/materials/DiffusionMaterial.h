@@ -45,9 +45,10 @@ protected:
     const Real _temp;
     
     // Material Property variables
+    MaterialProperty<Real> & _diffusion_coefficient;
     MaterialProperty<Real> & _mobility;
-    MaterialProperty<Real> & _mobility_dC;
-    Function * _mobility_concentration_function;
+    MaterialProperty<Real> & _diffusion_coefficient_dC;
+    Function * _diffusion_coefficient_concentration_function;
     
     MaterialProperty<Real> & _activity_coefficient;
     MaterialProperty<Real> & _activity_coefficient_dC;
@@ -56,6 +57,7 @@ protected:
     MaterialProperty<Real> & _lattice_misfit;
     MaterialProperty<Real> & _molar_volume;
     MaterialProperty<Real> & _max_concentration;
+    
     
 };
 
