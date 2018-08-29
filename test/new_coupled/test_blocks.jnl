@@ -1,0 +1,261 @@
+# -*- coding: mbcs -*-
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=200.0)
+mdb.models['Model-1'].sketches['__profile__'].rectangle(point1=(-3.0, -3.0), 
+    point2=(3.0, 3.0))
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=200.0)
+mdb.models['Model-1'].sketches['__profile__'].rectangle(point1=(-3.0, -3.0), 
+    point2=(3.0, 3.0))
+mdb.models['Model-1'].sketches['__profile__'].CircleByCenterPerimeter(center=(
+    0.0, 0.0), point1=(1.5, 0.0))
+mdb.models['Model-1'].Part(dimensionality=TWO_D_PLANAR, name='Part-1', type=
+    DEFORMABLE_BODY)
+mdb.models['Model-1'].parts['Part-1'].BaseShell(sketch=
+    mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=200.0)
+mdb.models['Model-1'].sketches['__profile__'].CircleByCenterPerimeter(center=(
+    0.0, 0.0), point1=(1.5, 0.0))
+mdb.models['Model-1'].Part(dimensionality=TWO_D_PLANAR, name='Part-2', type=
+    DEFORMABLE_BODY)
+mdb.models['Model-1'].parts['Part-2'].BaseShell(sketch=
+    mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].Material(name='Material-1')
+mdb.models['Model-1'].materials['Material-1'].Elastic(table=((0.1, 0.3), ))
+mdb.models['Model-1'].Material(name='Material-2')
+mdb.models['Model-1'].materials['Material-2'].Elastic(table=((0.05, 0.3), ))
+mdb.models['Model-1'].HomogeneousSolidSection(material='Material-1', name=
+    'Section-1', thickness=None)
+mdb.models['Model-1'].HomogeneousSolidSection(material='Material-2', name=
+    'Section-2', thickness=None)
+mdb.models['Model-1'].parts['Part-1'].Set(faces=
+    mdb.models['Model-1'].parts['Part-1'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-1')
+mdb.models['Model-1'].parts['Part-1'].SectionAssignment(offset=0.0, 
+    offsetField='', offsetType=MIDDLE_SURFACE, region=
+    mdb.models['Model-1'].parts['Part-1'].sets['Set-1'], sectionName=
+    'Section-1', thicknessAssignment=FROM_SECTION)
+mdb.models['Model-1'].parts['Part-2'].Set(faces=
+    mdb.models['Model-1'].parts['Part-2'].faces.getSequenceFromMask(('[#1 ]', 
+    ), ), name='Set-2')
+mdb.models['Model-1'].parts['Part-2'].SectionAssignment(offset=0.0, 
+    offsetField='', offsetType=MIDDLE_SURFACE, region=
+    mdb.models['Model-1'].parts['Part-2'].sets['Set-2'], sectionName=
+    'Section-2', thicknessAssignment=FROM_SECTION)
+mdb.models['Model-1'].rootAssembly.DatumCsysByDefault(CARTESIAN)
+mdb.models['Model-1'].rootAssembly.Instance(dependent=ON, name='Part-1-1', 
+    part=mdb.models['Model-1'].parts['Part-1'])
+mdb.models['Model-1'].rootAssembly.Instance(dependent=ON, name='Part-2-1', 
+    part=mdb.models['Model-1'].parts['Part-2'])
+mdb.models['Model-1'].StaticStep(name='Step-1', previous='Initial')
+mdb.models['Model-1'].rootAssembly.makeIndependent(instances=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.makeIndependent(instances=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'], ))
+mdb.models['Model-1'].rootAssembly.setElementType(elemTypes=(ElemType(
+    elemCode=CPS4R, elemLibrary=STANDARD), ElemType(elemCode=CPS3, 
+    elemLibrary=STANDARD)), regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ), ))
+mdb.models['Model-1'].rootAssembly.setElementType(elemTypes=(ElemType(
+    elemCode=CPS4R, elemLibrary=STANDARD, secondOrderAccuracy=OFF, 
+    hourglassControl=DEFAULT, distortionControl=DEFAULT), ElemType(
+    elemCode=CPS3, elemLibrary=STANDARD)), regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ), ))
+mdb.models['Model-1'].rootAssembly.seedPartInstance(deviationFactor=0.1, 
+    minSizeFactor=0.1, regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ), size=0.1)
+mdb.models['Model-1'].rootAssembly.seedPartInstance(deviationFactor=0.1, 
+    minSizeFactor=0.1, regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'], ), size=0.1)
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'], ))
+mdb.models['Model-1'].rootAssembly._previewMergeMeshes(instances=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], 
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1']), 
+    keepOnlyOrphanElems=True, nodeMergingTolerance=1e-06)
+mdb.models['Model-1'].rootAssembly.InstanceFromBooleanMerge(domain=BOTH, 
+    instances=(mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], 
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1']), mergeNodes=
+    BOUNDARY_ONLY, name='Part-3', nodeMergingTolerance=1e-06, 
+    originalInstances=SUPPRESS)
+del mdb.models['Model-1'].rootAssembly.features['Part-3-1']
+del mdb.models['Model-1'].parts['Part-3']
+del mdb.models['Model-1'].rootAssembly.features['Part-1-1']
+del mdb.models['Model-1'].rootAssembly.features['Part-2-1']
+mdb.models['Model-1'].rootAssembly.Instance(dependent=OFF, name='Part-1-1', 
+    part=mdb.models['Model-1'].parts['Part-1'])
+mdb.models['Model-1'].rootAssembly.Instance(dependent=OFF, name='Part-2-1', 
+    part=mdb.models['Model-1'].parts['Part-2'])
+# Save by srinath on 2018_08_25-11.03.27; build 6.13-4 2014_01_03-20.01.58 126873
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].rootAssembly.seedPartInstance(deviationFactor=0.1, 
+    minSizeFactor=0.1, regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], 
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1']), size=0.1)
+mdb.models['Model-1'].rootAssembly.setElementType(elemTypes=(ElemType(
+    elemCode=CPS4R, elemLibrary=STANDARD, secondOrderAccuracy=OFF, 
+    hourglassControl=DEFAULT, distortionControl=DEFAULT), ElemType(
+    elemCode=CPS3, elemLibrary=STANDARD)), regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    mask=('[#1 ]', ), )+\
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'].faces.getSequenceFromMask(
+    mask=('[#1 ]', ), ), ))
+mdb.models['Model-1'].rootAssembly.setElementType(elemTypes=(ElemType(
+    elemCode=CPS4R, elemLibrary=STANDARD, secondOrderAccuracy=OFF, 
+    hourglassControl=DEFAULT, distortionControl=DEFAULT), ElemType(
+    elemCode=CPS3, elemLibrary=STANDARD)), regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    mask=('[#1 ]', ), )+\
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'].faces.getSequenceFromMask(
+    mask=('[#1 ]', ), ), ))
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], 
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1']))
+# Save by srinath on 2018_08_25-11.04.12; build 6.13-4 2014_01_03-20.01.58 126873
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.Job(atTime=None, contactPrint=OFF, description='', echoPrint=OFF, 
+    explicitPrecision=SINGLE, getMemoryFromAnalysis=True, historyPrint=OFF, 
+    memory=90, memoryUnits=PERCENTAGE, model='Model-1', modelPrint=OFF, 
+    multiprocessingMode=DEFAULT, name='test_block', nodalOutputPrecision=SINGLE
+    , numCpus=1, numGPUs=0, queue=None, scratch='', type=ANALYSIS, 
+    userSubroutine='', waitHours=0, waitMinutes=0)
+mdb.models['Model-1'].rootAssembly.Set(edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#4 ]', ), ), name='Set-1')
+mdb.models['Model-1'].rootAssembly.Set(edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#10 ]', ), ), name='Set-2')
+mdb.models['Model-1'].rootAssembly.Set(edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#8 ]', ), ), name='Set-3')
+mdb.models['Model-1'].rootAssembly.Set(edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#2 ]', ), ), name='Set-4')
+mdb.models['Model-1'].rootAssembly.sets.changeKey(fromName='Set-1', toName=
+    'Right')
+mdb.models['Model-1'].rootAssembly.sets.changeKey(fromName='Set-2', toName=
+    'Left')
+mdb.models['Model-1'].rootAssembly.sets.changeKey(fromName='Set-3', toName=
+    'Bottom')
+mdb.models['Model-1'].rootAssembly.sets.changeKey(fromName='Set-4', toName=
+    'Top')
+mdb.models['Model-1'].rootAssembly.Surface(name='Surf-1', side1Edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#4 ]', ), ))
+mdb.models['Model-1'].rootAssembly.Surface(name='Left', side1Edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#10 ]', ), ))
+mdb.models['Model-1'].rootAssembly.Surface(name='Bottom', side1Edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#2 ]', ), ))
+mdb.models['Model-1'].rootAssembly.Surface(name='Top', side1Edges=
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].edges.getSequenceFromMask(
+    ('[#8 ]', ), ))
+mdb.models['Model-1'].rootAssembly.surfaces.changeKey(fromName='Surf-1', 
+    toName='Right')
+# Save by srinath on 2018_08_25-11.09.06; build 6.13-4 2014_01_03-20.01.58 126873
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].rootAssembly.setElementType(elemTypes=(ElemType(
+    elemCode=CPE4, elemLibrary=STANDARD), ElemType(elemCode=CPE3, 
+    elemLibrary=STANDARD)), regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ), ))
+mdb.models['Model-1'].rootAssembly.setElementType(elemTypes=(ElemType(
+    elemCode=CPS4, elemLibrary=STANDARD), ElemType(elemCode=CPS3, 
+    elemLibrary=STANDARD)), regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ), ))
+mdb.models['Model-1'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'], ))
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'], ))
+# Save by srinath on 2018_08_26-17.27.14; build 6.13-4 2014_01_03-20.01.58 126873
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'], ))
+mdb.models['Model-1'].rootAssembly.deleteMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'], ))
+mdb.models['Model-1'].rootAssembly.setElementType(elemTypes=(ElemType(
+    elemCode=CPE4, elemLibrary=STANDARD), ElemType(elemCode=CPE3, 
+    elemLibrary=STANDARD)), regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ), ))
+mdb.models['Model-1'].rootAssembly.setElementType(elemTypes=(ElemType(
+    elemCode=CPE4, elemLibrary=STANDARD), ElemType(elemCode=CPE3, 
+    elemLibrary=STANDARD)), regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1'].faces.getSequenceFromMask(
+    ('[#1 ]', ), ), ))
+mdb.models['Model-1'].rootAssembly.generateMesh(regions=(
+    mdb.models['Model-1'].rootAssembly.instances['Part-2-1'], 
+    mdb.models['Model-1'].rootAssembly.instances['Part-1-1']))
+# Save by srinath on 2018_08_26-17.28.28; build 6.13-4 2014_01_03-20.01.58 126873
