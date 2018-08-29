@@ -42,7 +42,7 @@ protected:
     const MaterialProperty<RankTwoTensor> & _stress;
     const MaterialProperty<RankTwoTensor> & _stress_old;
     const MaterialProperty<RankFourTensor> & _Jacobian_mult_elastic;
-//    const MaterialProperty<RankTwoTensor> * _deformation_gradient;
+    const MaterialProperty<RankTwoTensor> & _deformation_gradient;
 //    const MaterialProperty<RankTwoTensor> * _deformation_gradient_old;
 
     const unsigned int _chem_var;
@@ -54,6 +54,8 @@ protected:
 
    const bool _conc_coupled;
    const unsigned int _conc_var;
+   const VariableValue & _concentration;
+   const VariableValue & _concentration_old;
 
     /// d(strain)/d(concentration), if computed by ComputeConcentrationEigenstrain
    const MaterialProperty<RankTwoTensor> * const _deigenstrain_dC;

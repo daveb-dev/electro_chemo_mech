@@ -53,12 +53,15 @@ Stresschemicalpotential::Stresschemicalpotential(const InputParameters & paramet
         _stress(getMaterialPropertyByName<RankTwoTensor>(_base_name + "stress")),
         _stress_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + "stress")),
         _Jacobian_mult_elastic(getMaterialPropertyByName<RankFourTensor>(_base_name + "Jacobian_mult")),
+        _deformation_gradient(getMaterialPropertyByName<RankTwoTensor>(_base_name +  "deformation_gradient")),
         _chem_var(coupled("chemical_potential")),
         _component(getParam<unsigned int>("component")),
         _ndisp(coupledComponents("displacements")),
         _disp_var(_ndisp),
         _conc_coupled(isCoupled("concentration")),
         _conc_var(_conc_coupled ? coupled("concentration") : 0),
+        _concentration(coupledValue("concentration")),
+        _concentration_old(coupledValueOld("concentration")),
         _deigenstrain_dC(_conc_coupled ? &getMaterialPropertyDerivative<RankTwoTensor>(
                                          getParam<std::string>("concentration_eigenstrain_name"),
                                          getVar("concentration", 0)->name())
@@ -73,9 +76,11 @@ Stresschemicalpotential::Stresschemicalpotential(const InputParameters & paramet
 Real 
 Stresschemicalpotential::computeQpResidual()
 {
-    return (_u[_qp] + _stress[_qp].doubleContraction((*_deigenstrain_dC)[_qp]))*_test[_i][_qp]/_density[_qp];
+    Real J = _deformation_gradient[_qp].det();
+    RankTwoTensor kirchoff_stress = _stress[_qp]*J;
+    return (_u[_qp] + kirchoff_stress.doubleContraction((*_deigenstrain_dC)[_qp]))*_test[_i][_qp]/_density[_qp];
     
-    return 0.0;
+//    return 0.0;
 }
 
 Real
@@ -87,24 +92,34 @@ Stresschemicalpotential::computeQpJacobian()
 Real
 Stresschemicalpotential::computeQpOffDiagJacobian(unsigned int jvar)
 {
-    if (jvar != _chem_var)
+    Real J = _deformation_gradient[_qp].det();
+    const RankTwoTensor I(RankTwoTensor::initIdentity);    
+    RankTwoTensor dstress_dc = _Jacobian_mult_elastic[_qp]*((*_deigenstrain_dC)[_qp]*I);
+    if (jvar == _conc_var)
     {
-        if (jvar == _conc_var)
+//        return -dstress_dc.trace() * _phi[_j][_qp] * _test[_i][_qp]/_density[_qp]/3.0;
+        if (fabs(_concentration[_qp]) > 1.0e-8 )
         {
-            
-        } else
+            Real resid = ((_stress[_qp] - _stress_old[_qp]).trace())/(_concentration[_qp] - _concentration_old[_qp])
+                    *((*_deigenstrain_dC)[_qp]).trace()/3.0;
+            resid *= _phi[_j][_qp] * _test[_i][_qp];
+            return -resid;
+        }
+        else {
+            return 0.0;
+        }
+    } else
+    {
+        for (unsigned int coupled_component = 0; coupled_component < _ndisp; ++ coupled_component)
         {
-            for (unsigned int coupled_component = 0; coupled_component < _ndisp; ++ coupled_component)
+            if (jvar == _disp_var[coupled_component])
             {
-                if (jvar == _disp_var[coupled_component])
-                {
-                    const RealGradient  sum_C3x1 = _Jacobian_mult_elastic[_qp].sum3x1();
-                   
-                }
+                const RealGradient  sum_C3x1 = _Jacobian_mult_elastic[_qp].sum3x1();
+
             }
         }
-//        return 0.0;
     }
+//        return 0.0;
     return 0.0;
 }
 // Todo implement off diagonal terms

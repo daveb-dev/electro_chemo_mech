@@ -80,6 +80,7 @@ Real
 ChemoDiffusion::computeQpJacobian()
 {
   Real jac = _diffusion_coefficient[_qp] * Diffusion::computeQpJacobian();
+      
   if (_diffusion_coefficient_dC) 
   {
     jac += (*_diffusion_coefficient_dC)[_qp] * _phi[_j][_qp] * Diffusion::computeQpResidual();
@@ -95,7 +96,7 @@ ChemoDiffusion::computeQpJacobian()
       jac += dgamma * (1.0 - c/gamma * dgamma)/gamma 
               * _phi[_j][_qp]*_grad_u[_qp]*_grad_test[_i][_qp];
   }
-  if (_mu_var)
+  if (_mu_coupled)
       jac += _phi[_j][_qp]*(*_grad_mu)[_qp]*_grad_test[_i][_qp];
   
   return jac;
