@@ -42,6 +42,7 @@ protected:
     const MaterialProperty<RankTwoTensor> & _stress;
     const MaterialProperty<RankTwoTensor> & _stress_old;
     const MaterialProperty<RankFourTensor> & _Jacobian_mult_elastic;
+    const MaterialProperty<RankFourTensor> & _elasticity_tensor;
     const MaterialProperty<RankTwoTensor> & _deformation_gradient;
 //    const MaterialProperty<RankTwoTensor> * _deformation_gradient_old;
 

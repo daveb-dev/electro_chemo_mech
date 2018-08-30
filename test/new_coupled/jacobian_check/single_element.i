@@ -1,13 +1,14 @@
 #Run with 4 procs
 [GlobalParams]
-  displacements = 'disp_x disp_y '
+  displacements = 'disp_x disp_y'
+  concentration = conc
 []
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
   nx = 5
-  ny = 5
+  ny = 25
   xmin = 0.0
   xmax = 1.0
   ymin = 0.0
@@ -28,7 +29,7 @@
     scaling = 1e3
   [../]
   [./mu_m]
-    scaling = 1e3
+    scaling = 1e-5
   [../]
 []
 
@@ -129,14 +130,28 @@
 []
 
 [Kernels]
-  [./TensorMechanics]
-    strain = FINITE
-    add_variables = true
-    incremental = true
-    concentration = conc
-    use_displaced_mesh = true
+  [./stress_x]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y'
+    component = 0
+    use_displaced_mesh = false
     volumetric_locking_correction = true
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_x
   [../]
+
+  [./stress_y]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y'
+    component = 1
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_y
+  [../]
+
 
   [./diff]
     type = ChemoDiffusion
@@ -177,7 +192,7 @@
     type = NeumannBC
     variable = conc
     boundary = top
-    value = 1.524e-5 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    value = 1.524e-6 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
     # This is actual current divided by the density for 0.012 A/m^2
     # Molar density of 7.874e4 mol/m^3
   [../]
@@ -199,14 +214,14 @@
 [Materials]
   [./heat]
     type = DiffusionMaterial
-    diffusion_coefficient = 3.0e-7 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    diffusion_coefficient = 3.0e-3 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
     gas_constant = 1.0
     temperature = 1.0
   [../]
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0' #silicon in mol/(m^3)
+    prop_values = '1.0e-18' #silicon in mol/(m^3)
   [../]
 
   [./elasticity_tensor]
@@ -240,10 +255,10 @@
 
 [Executioner]
   type = Transient
-  solve_type = 'NEWTON'
+  solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-8
+  nl_abs_tol = 1e-9
   l_tol = 1e-3
 
   l_max_its = 100
@@ -252,8 +267,8 @@
 
   compute_initial_residual_before_preset_bcs = true
 
-  dt = 20
-  end_time = 1000
+  dt = 10
+  end_time = 400
 []
 [Debug]
   show_material_props = true

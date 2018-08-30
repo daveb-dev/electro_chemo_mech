@@ -2,10 +2,10 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 25
+  nx = 100
   ny = 25
   xmin = 0.0
-  xmax = 20.0e-6
+  xmax = 2.0e-6
   ymin = 0.0
   ymax = 0.2e-6
 []
@@ -52,7 +52,7 @@
     type = NeumannBC
     variable = conc
     boundary = top
-    value = 1.524e-7 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    value = 1.524e-12 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
   [../]
 
 []
@@ -60,7 +60,7 @@
 [Materials]
   [./heat]
     type = HeatConductionMaterial
-    thermal_conductivity = 0.1e-12 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    thermal_conductivity = 0.1e-3 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
     specific_heat = 1.0
   [../]
   [./density]

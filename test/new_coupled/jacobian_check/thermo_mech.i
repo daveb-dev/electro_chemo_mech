@@ -100,6 +100,12 @@
   #   disp_z = disp_z
   # [../]
 []
+[Preconditioning]
+  [./SMP]
+    type = SMP
+    full = true
+  [../]
+[]
 
 [Executioner]
   type = Transient

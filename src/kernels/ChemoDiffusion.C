@@ -97,7 +97,7 @@ ChemoDiffusion::computeQpJacobian()
               * _phi[_j][_qp]*_grad_u[_qp]*_grad_test[_i][_qp];
   }
   if (_mu_coupled)
-      jac += _phi[_j][_qp]*(*_grad_mu)[_qp]*_grad_test[_i][_qp];
+      jac += _mobility[_qp]*_phi[_j][_qp]*(*_grad_mu)[_qp]*_grad_test[_i][_qp];
   
   return jac;
 }

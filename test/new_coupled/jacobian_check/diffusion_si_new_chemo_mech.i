@@ -1,17 +1,19 @@
 #Run with 4 procs
 [GlobalParams]
-  displacements = 'disp_x disp_y '
+  displacements = 'disp_x disp_y disp_z'
 []
 
 [Mesh]
   type = GeneratedMesh
-  dim = 2
-  nx = 50
-  ny = 100
+  dim = 3
+  nx = 1
+  ny = 24
   xmin = 0.0
-  xmax = 1.0
+  xmax = 0.2
   ymin = 0.0
   ymax = 0.2
+  zmax = 0.2
+  zmin = 0.2
 []
 
 [Variables]
@@ -22,13 +24,13 @@
   [./disp_y]
     # scaling = 1.0e8
   [../]
+  [./disp_z]
+    # scaling = 1.0e8
+  [../]
 
   [./conc]
     initial_condition = 0.0078
-    # scaling = 1e2
-  [../]
-  [./mu_m]
-    scaling = 1e3
+    scaling = 1e1
   [../]
 []
 
@@ -129,43 +131,49 @@
 []
 
 [Kernels]
-  [./TensorMechanics]
-    strain = FINITE
-    add_variables = true
-    incremental = true
-    use_displaced_mesh = true
+  [./stress_x]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 0
+    use_displaced_mesh = false
     volumetric_locking_correction = true
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_x
+  [../]
+
+  [./stress_y]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 1
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_y
+  [../]
+
+  [./stress_z]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_z
   [../]
 
   [./diff]
     type = ChemoDiffusion
     variable = conc
     diffusion_coefficient = diffusion_coefficient
-    stress_based_chemical_potential = mu_m
     use_displaced_mesh = false
   [../]
   [./diff_t]
     type = ChemoDiffusionTimeDerivative
     variable = conc
     use_displaced_mesh = false
-  [../]
-  [./mu_x]
-    type = Stresschemicalpotential
-    variable = mu_m
-    chemical_potential = mu_m
-    concentration = conc
-    displacements = 'disp_x disp_y'
-    component = 0
-    concentration_eigenstrain_name = eigenstrain
-  [../]
-  [./mu_y]
-    type = Stresschemicalpotential
-    variable = mu_m
-    chemical_potential = mu_m
-    concentration = conc
-    displacements = 'disp_x disp_y'
-    component = 1
-    concentration_eigenstrain_name = eigenstrain
   [../]
 []
 
@@ -178,6 +186,12 @@
     # This is actual current divided by the density for 0.012 A/m^2
     # Molar density of 7.874e4 mol/m^3
   [../]
+  [./right_flux]
+    type = DiffusionFluxBC
+    variable = conc
+    boundary = 'right left front back'
+  [../]
+
   [./bottom_x]
     type = PresetBC
     variable = disp_x
@@ -196,9 +210,9 @@
 [Materials]
   [./heat]
     type = DiffusionMaterial
-    diffusion_coefficient = 3.0e-7 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
-    gas_constant = 1.0
-    temperature = 1.0
+    diffusion_coefficient = 3.0e-3 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    gas_constant = 8.314e-3
+    temperature = 298
   [../]
   [./density]
     type = GenericConstantMaterial
@@ -240,14 +254,14 @@
   solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-10
+  nl_abs_tol = 1e-9
   l_tol = 1e-3
 
   l_max_its = 100
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'lu'
 
-  dt = 20
+  dt = 50
   end_time = 1000
 []
 [Debug]

@@ -1,7 +1,7 @@
 #Run with 4 procs
 [GlobalParams]
   displacements = 'disp_x disp_y '
-  temperature = conc
+  # temperature = conc
   volumetric_locking_correction = true
 []
 
@@ -14,7 +14,7 @@
   xmin = 0.0
   xmax = 20.0
   ymin = 0.0
-  ymax = 10.0
+  ymax = 1.0
 []
 
 [Variables]
@@ -118,15 +118,33 @@
 
 
 [Kernels]
-  [./TensorMechanics]
-    strain = FINITE
-    incremental = true
+  [./stress_x]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y'
+    component = 0
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    temperature = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_x
+  [../]
+
+  [./stress_y]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y'
+    component = 1
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    temperature = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_y
   [../]
 
   [./diff]
     type = ChemoDiffusion
     variable = conc
     use_displaced_mesh = false
+    diffusion_coefficient = diffusion_coefficient
   [../]
   [./diff_t]
     type = ChemoDiffusionTimeDerivative
@@ -186,7 +204,7 @@
 
   [./heat]
     type = DiffusionMaterial
-    mobility = 0.1e-3
+    diffusion_coefficient = 3.0
     activity_coefficient = 1.0
   [../]
   [./density]
