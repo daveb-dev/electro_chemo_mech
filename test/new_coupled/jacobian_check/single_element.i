@@ -6,8 +6,8 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 5
-  ny = 5
+  nx = 20
+  ny = 20
   xmin = 0.0
   xmax = 1.0
   ymin = 0.0
@@ -25,7 +25,7 @@
 
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e3
+    # scaling = 1e3
   [../]
   [./mu_m]
     scaling = 1e3
@@ -136,6 +136,7 @@
     concentration = conc
     use_displaced_mesh = true
     volumetric_locking_correction = true
+    eigenstrain_names = eigenstrain
   [../]
 
   [./diff]
@@ -240,10 +241,10 @@
 
 [Executioner]
   type = Transient
-  solve_type = 'NEWTON'
+  solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-8
+  nl_abs_tol = 1e-10
   l_tol = 1e-3
 
   l_max_its = 100
