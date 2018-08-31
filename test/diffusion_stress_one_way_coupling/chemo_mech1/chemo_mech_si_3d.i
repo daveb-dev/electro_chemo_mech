@@ -1,20 +1,21 @@
 #Run with 4 procs
 [GlobalParams]
-  displacements = 'disp_x disp_y '
-  # temperature = conc
+  displacements = 'disp_x disp_y disp_z'
   volumetric_locking_correction = true
 []
 
 [Mesh]
   type = GeneratedMesh
-  dim = 2
-  nx = 50
+  dim = 3
+  nx = 2
   ny = 25
-
+  nz = 2
   xmin = 0.0
-  xmax = 20.0
+  xmax = 0.01
   ymin = 0.0
-  ymax = 1.0
+  ymax = 0.2
+  zmin = 0
+  zmax = 0.01
 []
 
 [Variables]
@@ -24,14 +25,18 @@
   [./disp_y]
     # scaling = 1.0e8
   [../]
-  # [./disp_z]
-  #   # scaling = 1.0e8
-  # [../]
+  [./disp_z]
+    # scaling = 1.0e8
+  [../]
 
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e6
+    scaling = 1e8
   [../]
+  [./mu_m]
+    # scaling = 1e10
+  [../]
+
 []
 
 [AuxVariables]
@@ -44,22 +49,6 @@
     family = MONOMIAL
   [../]
   [./stress_33]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./strain_11]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./strain_22]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./strain_33]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./vol_strain]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -87,40 +76,14 @@
     index_j = 2
     index_i = 2
   [../]
-  [./strain_11]
-    type = RankTwoAux
-    variable = strain_11
-    rank_two_tensor = total_strain
-    index_j = 0
-    index_i = 0
-  [../]
-  [./strrain_22]
-    type = RankTwoAux
-    variable = strain_22
-    rank_two_tensor = total_strain
-    index_j = 1
-    index_i = 1
-  [../]
-  [./strain_33]
-    type = RankTwoAux
-    variable = strain_33
-    rank_two_tensor = total_strain
-    index_j = 2
-    index_i = 2
-  [../]
-  [./vol]
-    type = RankTwoScalarAux
-    rank_two_tensor = total_strain
-    variable = vol_strain
-    scalar_type = VolumetricStrain
-  [../]
+
 []
 
 
 [Kernels]
   [./stress_x]
     type = StressDivergenceTensors
-    displacements = 'disp_x disp_y'
+    displacements = 'disp_x disp_y disp_z'
     component = 0
     use_displaced_mesh = false
     volumetric_locking_correction = true
@@ -131,7 +94,7 @@
 
   [./stress_y]
     type = StressDivergenceTensors
-    displacements = 'disp_x disp_y'
+    displacements = 'disp_x disp_y disp_z'
     component = 1
     use_displaced_mesh = false
     volumetric_locking_correction = true
@@ -140,17 +103,56 @@
     variable = disp_y
   [../]
 
+  [./stress_z]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    temperature = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_z
+  [../]
   [./diff]
     type = ChemoDiffusion
     variable = conc
     use_displaced_mesh = false
     diffusion_coefficient = diffusion_coefficient
+    stress_based_chemical_potential = mu_m
   [../]
   [./diff_t]
     type = ChemoDiffusionTimeDerivative
     variable = conc
     use_displaced_mesh = false
   [../]
+  [./mu_x]
+    type = Stresschemicalpotential
+    variable = mu_m
+    chemical_potential = mu_m
+    concentration = conc
+    displacements = 'disp_x disp_y disp_z'
+    component = 0
+    concentration_eigenstrain_name = eigenstrain
+  [../]
+  [./mu_y]
+    type = Stresschemicalpotential
+    variable = mu_m
+    chemical_potential = mu_m
+    concentration = conc
+    displacements = 'disp_x disp_y disp_z'
+    component = 1
+    concentration_eigenstrain_name = eigenstrain
+  [../]
+  [./mu_s]
+    type = Stresschemicalpotential
+    variable = mu_m
+    chemical_potential = mu_m
+    concentration = conc
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    concentration_eigenstrain_name = eigenstrain
+  [../]
+
 []
 
 [BCs]
@@ -166,6 +168,13 @@
     boundary = bottom
     value = 0.0
   [../]
+  [./bottom_z]
+    type = PresetBC
+    variable = disp_z
+    boundary = bottom
+    value = 0.0
+  [../]
+
   # [./bottom_conc]
   #   type = DirichletBC
   #   variable = conc
@@ -199,18 +208,18 @@
     eigenstrain_name = eigenstrain
   [../]
   [./stress]
-    type = ComputeKirchoffStress
+    type = ComputeFiniteStrainElasticStress
   [../]
 
   [./heat]
-    type = DiffusionMaterial
-    diffusion_coefficient = 3.0
-    activity_coefficient = 1.0
+      type = DiffusionMaterial
+      diffusion_coefficient = 3.0e-7 # um^2/s
   [../]
+
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0' #silicon in mol/(m^3)
+    prop_values = '7.874e-5' #silicon in mol/(um^3)
   [../]
 []
 [Preconditioning]
@@ -230,8 +239,8 @@
 
   l_max_its = 100
 
-  dt = 200
-  end_time = 7200.0
+  dt = 50
+  end_time = 5000.0
 []
 [Debug]
   # show_material_props = true

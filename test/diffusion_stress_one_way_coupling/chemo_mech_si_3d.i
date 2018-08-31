@@ -8,13 +8,13 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
-  nx = 50
-  ny = 25
+  nx = 3
+  ny = 3
   nz = 5
   xmin = 0.0
-  xmax = 20.0
+  xmax = 2.0
   ymin = 0.0
-  ymax = 10.0
+  ymax = 2.0
   zmin = 0
   zmax = 1.0
 []
@@ -78,11 +78,38 @@
 
 
 [Kernels]
-  [./TensorMechanics]
-    strain = FINITE
-    incremental = true
+  [./stress_x]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 0
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    temperature = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_x
   [../]
 
+  [./stress_y]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 1
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    temperature = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_y
+  [../]
+
+  [./stress_z]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    temperature = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_z
+  [../]
   [./diff]
     type = HeatConduction
     variable = conc

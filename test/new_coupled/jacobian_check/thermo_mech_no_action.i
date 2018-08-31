@@ -22,8 +22,37 @@
 []
 
 [Kernels]
-  [./TensorMechanics]
+  [./stress_x]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 0
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
     temperature = temp
+    thermal_eigenstrain_name = eigenstrain
+    variable = disp_x
+  [../]
+
+  [./stress_y]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 1
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    temperature = temp
+    thermal_eigenstrain_name = eigenstrain
+    variable = disp_y
+  [../]
+
+  [./stress_z]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    temperature = temp
+    thermal_eigenstrain_name = eigenstrain
+    variable = disp_z
   [../]
 
   [./heat]
@@ -52,11 +81,17 @@
     value = 0.0
   [../]
 
-  [./bottom_temp]
-    type = DirichletBC
+  # [./bottom_temp]
+  #   type = DirichletBC
+  #   variable = temp
+  #   boundary = 1
+  #   value = 10.0
+  # [../]
+  [./top_flux]
+    type = NeumannBC
     variable = temp
-    boundary = 1
-    value = 10.0
+    boundary = 2
+    value = -1.0e-6
   [../]
 []
 
@@ -102,7 +137,7 @@
 []
 [Preconditioning]
   [./SMP]
-    type = SMP
+    type = FDP
     full = true
   [../]
 []

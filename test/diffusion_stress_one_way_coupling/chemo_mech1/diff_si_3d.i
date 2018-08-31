@@ -1,68 +1,80 @@
 #Run with 4 procs
+[GlobalParams]
+  # displacements = 'disp_x disp_y disp_z'
+  volumetric_locking_correction = true
+[]
+
 [Mesh]
   type = GeneratedMesh
-  dim = 2
-  nx = 100
-  ny = 25
+  dim = 3
+  nx = 5
+  ny = 5
+  nz = 5
   xmin = 0.0
-  xmax = 2.0e-6
+  xmax = 1.0
   ymin = 0.0
-  ymax = 0.2e-6
+  ymax = 0.2
+  zmin = 0
+  zmax = 1.0
 []
 
 [Variables]
+  # [./disp_x]
+  #   # scaling = 1.0e8
+  # [../]
+  # [./disp_y]
+  #   # scaling = 1.0e8
+  # [../]
+  # [./disp_z]
+  #   # scaling = 1.0e8
+  # [../]
+
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e3
-  [../]
-[]
-[AuxVariables]
-  [./flux]
-    order = CONSTANT
-    family = MONOMIAL
+    scaling = 1e6
   [../]
 []
 
-[AuxKernels]
-  [./flux]
-    type = DiffusionFluxAux
-    variable = flux
-    component = y
-    diffusivity = thermal_conductivity
-    diffusion_variable = conc
-  [../]
-[]
 
 [Kernels]
+
   [./diff]
-    type = HeatConduction
+    type = ChemoDiffusion
     variable = conc
-    diffusion_coefficient = thermal_conductivity
     use_displaced_mesh = false
+    diffusion_coefficient = diffusion_coefficient
   [../]
   [./diff_t]
-    type = HeatConductionTimeDerivative
+    type = ChemoDiffusionTimeDerivative
     variable = conc
     use_displaced_mesh = false
   [../]
+
 []
 
 [BCs]
+
+  # [./bottom_conc]
+  #   type = DirichletBC
+  #   variable = conc
+  #   boundary = 2
+  #   value = 0.01
+  # [../]
   [./bottom_flux]
     type = NeumannBC
     variable = conc
     boundary = top
-    value = 1.524e-12 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    value = 5.18e-6 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
   [../]
 
 []
 
 [Materials]
   [./heat]
-    type = HeatConductionMaterial
-    thermal_conductivity = 0.1e-3 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
-    specific_heat = 1.0
+      type = DiffusionMaterial
+      diffusion_coefficient = 1e3
   [../]
+
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
@@ -77,20 +89,20 @@
 []
 [Executioner]
   type = Transient
-  solve_type = 'LINEAR'
+  solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-10
+  # nl_abs_tol = 1e-11
 
   l_tol = 1e-3
 
   l_max_its = 100
 
   dt = 200
-  end_time = 3600.0
+  end_time = 5000.0
 []
 [Debug]
-  show_material_props = true
+  # show_material_props = true
   show_var_residual_norms = true
 []
 [Outputs]

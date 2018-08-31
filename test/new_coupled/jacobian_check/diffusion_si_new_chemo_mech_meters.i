@@ -1,40 +1,36 @@
 #Run with 4 procs
 [GlobalParams]
-  displacements = 'disp_x disp_y '
-  # temperature = conc
-  volumetric_locking_correction = true
+  displacements = 'disp_x disp_y disp_z'
 []
 
 [Mesh]
-  type = GeneratedMesh
-  dim = 2
-  nx = 50
-  ny = 25
-
-  xmin = 0.0
-  xmax = 20.0
-  ymin = 0.0
-  ymax = 1.0
+  file = 'cube.e'
 []
 
 [Variables]
+
   [./disp_x]
     # scaling = 1.0e8
   [../]
   [./disp_y]
     # scaling = 1.0e8
   [../]
-  # [./disp_z]
-  #   # scaling = 1.0e8
-  # [../]
+  [./disp_z]
+    # scaling = 1.0e8
+  [../]
 
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e6
+    scaling = 1e-3
   [../]
 []
 
 [AuxVariables]
+  [./flux]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+
   [./stress_11]
     order = CONSTANT
     family = MONOMIAL
@@ -63,9 +59,16 @@
     order = CONSTANT
     family = MONOMIAL
   [../]
-[]
 
+[]
 [AuxKernels]
+  [./flux]
+    type = DiffusionFluxAux
+    variable = flux
+    component = y
+    diffusivity = diffusion_coefficient
+    diffusion_variable = conc
+  [../]
   [./stress_11]
     type = RankTwoAux
     variable = stress_11
@@ -114,37 +117,49 @@
     variable = vol_strain
     scalar_type = VolumetricStrain
   [../]
-[]
 
+
+[]
 
 [Kernels]
   [./stress_x]
     type = StressDivergenceTensors
-    displacements = 'disp_x disp_y'
+    displacements = 'disp_x disp_y disp_z'
     component = 0
     use_displaced_mesh = false
     volumetric_locking_correction = true
-    temperature = conc
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
   [../]
 
   [./stress_y]
     type = StressDivergenceTensors
-    displacements = 'disp_x disp_y'
+    displacements = 'disp_x disp_y disp_z'
     component = 1
     use_displaced_mesh = false
     volumetric_locking_correction = true
-    temperature = conc
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
+  [../]
+
+  [./stress_z]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    use_displaced_mesh = false
+    volumetric_locking_correction = true
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_z
   [../]
 
   [./diff]
     type = ChemoDiffusion
     variable = conc
-    use_displaced_mesh = false
     diffusion_coefficient = diffusion_coefficient
+    use_displaced_mesh = false
   [../]
   [./diff_t]
     type = ChemoDiffusionTimeDerivative
@@ -154,37 +169,51 @@
 []
 
 [BCs]
+  [./bottom_flux]
+    type = NeumannBC
+    variable = conc
+    boundary = 2
+    value = 0.012 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
+    # This is actual current divided by the density for 0.012 A/m^2
+    # Molar density of 7.874e4 mol/m^3
+  [../]
+  # [./right_flux]
+  #   type = DiffusionFluxBC
+  #   variable = conc
+  #   boundary = 'right left front back'
+  # [../]
+
   [./bottom_x]
     type = PresetBC
     variable = disp_x
-    boundary = bottom
+    boundary = 1
     value = 0.0
   [../]
   [./bottom_y]
     type = PresetBC
     variable = disp_y
-    boundary = bottom
+    boundary = 1
     value = 0.0
-  [../]
-  # [./bottom_conc]
-  #   type = DirichletBC
-  #   variable = conc
-  #   boundary = 2
-  #   value = 0.01
-  # [../]
-  [./bottom_flux]
-    type = NeumannBC
-    variable = conc
-    boundary = top
-    value = 5.18e-5 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
   [../]
 
 []
 
 [Materials]
+  [./heat]
+    type = DiffusionMaterial
+    diffusion_coefficient = 3.0e-19 # D = 10^-13 m^2/s/ R = 8.314/T=298 K
+    gas_constant = 8.314
+    temperature = 298
+  [../]
+  [./density]
+    type = GenericConstantMaterial
+    prop_names = 'density'
+    prop_values = '1.0' #silicon in mol/(m^3)
+  [../]
+
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 0.1
+    youngs_modulus = 100e9
     poissons_ratio = 0.26
   [../]
   [./strain]
@@ -202,39 +231,32 @@
     type = ComputeKirchoffStress
   [../]
 
-  [./heat]
-    type = DiffusionMaterial
-    diffusion_coefficient = 3.0
-    activity_coefficient = 1.0
-  [../]
-  [./density]
-    type = GenericConstantMaterial
-    prop_names = 'density'
-    prop_values = '1.0' #silicon in mol/(m^3)
-  [../]
+
 []
 [Preconditioning]
   [./SMP]
     type = SMP
-    # full = true
+    full = true
   [../]
 []
+
 [Executioner]
   type = Transient
   solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-6
-  # nl_abs_tol = 1e-11
-
+  nl_abs_tol = 1e-9
   l_tol = 1e-3
 
   l_max_its = 100
+  petsc_options_iname = '-pc_type'
+  petsc_options_value = 'lu'
 
-  dt = 200
-  end_time = 7200.0
+  dt = 0.1
+  end_time = 1000
 []
 [Debug]
-  # show_material_props = true
+  show_material_props = true
   show_var_residual_norms = true
 []
 [Outputs]
