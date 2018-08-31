@@ -43,6 +43,7 @@ validParams<Stresschemicalpotential>()
       "concentration_eigenstrain_name",
       "concentration_eigenstrain",
       "Eigenstrain name used in ComputeConcentrationEigenstrain");
+    
     return params;
 }
 
@@ -79,7 +80,7 @@ Stresschemicalpotential::computeQpResidual()
 {
     Real J = _deformation_gradient[_qp].det();
     RankTwoTensor kirchoff_stress = _stress[_qp]*J;
-    return (_u[_qp] + (1.0/_density[_qp])*kirchoff_stress.doubleContraction((*_deigenstrain_dC)[_qp]))*_test[_i][_qp];
+    return (_u[_qp] + (1.0/_density[_qp])*kirchoff_stress.doubleContraction((*_deigenstrain_dC)[_qp]))*_test[_i][_qp]/3.0;
     
 //    return 0.0;
 }

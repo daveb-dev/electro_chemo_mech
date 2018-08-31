@@ -6,15 +6,17 @@
 []
 
 [Mesh]
-  type = GeneratedMesh
-  dim = 2
-  nx = 50
-  ny = 25
-
-  xmin = 0.0
-  xmax = 20.0
-  ymin = 0.0
-  ymax = 1.0
+  # type = GeneratedMesh
+  # dim = 2
+  # nx = 20
+  # ny = 20
+  #
+  # xmin = 0.0
+  # xmax = 2.0
+  # ymin = 0.0
+  # ymax = 0.
+  type = FileMesh
+  file = 'test.msh'
 []
 
 [Variables]
@@ -30,7 +32,7 @@
 
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e6
+    scaling = 1e3
   [../]
 []
 
@@ -122,9 +124,9 @@
     type = StressDivergenceTensors
     displacements = 'disp_x disp_y'
     component = 0
-    use_displaced_mesh = false
+    use_displaced_mesh = true
     volumetric_locking_correction = true
-    temperature = conc
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
   [../]
@@ -133,7 +135,7 @@
     type = StressDivergenceTensors
     displacements = 'disp_x disp_y'
     component = 1
-    use_displaced_mesh = false
+    use_displaced_mesh = true
     volumetric_locking_correction = true
     temperature = conc
     concentration_eigenstrain_name = eigenstrain
@@ -197,6 +199,7 @@
     stress_free_concentration = 0.0078
     partial_molar_volume = 0.7
     eigenstrain_name = eigenstrain
+    use_displaced_mesh = false
   [../]
   [./stress]
     type = ComputeKirchoffStress
@@ -204,8 +207,9 @@
 
   [./heat]
     type = DiffusionMaterial
-    diffusion_coefficient = 3.0
+    diffusion_coefficient = 3.0e-7
     activity_coefficient = 1.0
+    use_displaced_mesh = false
   [../]
   [./density]
     type = GenericConstantMaterial
@@ -216,14 +220,14 @@
 [Preconditioning]
   [./SMP]
     type = SMP
-    # full = true
+    full = true
   [../]
 []
 [Executioner]
   type = Transient
   solve_type = 'PJFNK'
 
-  nl_rel_tol = 1e-6
+  nl_rel_tol = 1e-3
   # nl_abs_tol = 1e-11
 
   l_tol = 1e-3

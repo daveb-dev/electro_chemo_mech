@@ -7,15 +7,15 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
-  nx = 2
-  ny = 25
-  nz = 2
+  nx = 5
+  ny = 5
+  nz = 5
   xmin = 0.0
-  xmax = 0.01
+  xmax = 0.2
   ymin = 0.0
   ymax = 0.2
   zmin = 0
-  zmax = 0.01
+  zmax = 0.2
 []
 
 [Variables]
@@ -31,15 +31,28 @@
 
   [./conc]
     initial_condition = 0.0078
-    scaling = 1e8
+    scaling = 1e5
   [../]
   [./mu_m]
-    # scaling = 1e10
+    # scaling = 1e8
   [../]
 
 []
 
 [AuxVariables]
+  [./flux_x]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./flux_y]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./flux_z]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+
   [./stress_11]
     order = CONSTANT
     family = MONOMIAL
@@ -55,6 +68,31 @@
 []
 
 [AuxKernels]
+  [./flux_y]
+    type = DiffusionFluxAux
+    variable = flux_y
+    component = y
+    diffusivity = diffusion_coefficient
+    diffusion_variable = conc
+  [../]
+
+  [./flux_x]
+    type = DiffusionFluxAux
+    variable = flux_x
+    component = x
+    diffusivity = diffusion_coefficient
+    diffusion_variable = conc
+  [../]
+
+  [./flux_z]
+    type = DiffusionFluxAux
+    variable = flux_z
+    component = z
+    diffusivity = diffusion_coefficient
+    diffusion_variable = conc
+  [../]
+
+
   [./stress_11]
     type = RankTwoAux
     variable = stress_11
@@ -85,9 +123,9 @@
     type = StressDivergenceTensors
     displacements = 'disp_x disp_y disp_z'
     component = 0
-    use_displaced_mesh = false
+    # use_displaced_mesh = false
     volumetric_locking_correction = true
-    temperature = conc
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
   [../]
@@ -96,9 +134,9 @@
     type = StressDivergenceTensors
     displacements = 'disp_x disp_y disp_z'
     component = 1
-    use_displaced_mesh = false
+    # use_displaced_mesh = false
     volumetric_locking_correction = true
-    temperature = conc
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
   [../]
@@ -107,9 +145,9 @@
     type = StressDivergenceTensors
     displacements = 'disp_x disp_y disp_z'
     component = 2
-    use_displaced_mesh = false
+    # use_displaced_mesh = false
     volumetric_locking_correction = true
-    temperature = conc
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_z
   [../]
@@ -133,6 +171,7 @@
     displacements = 'disp_x disp_y disp_z'
     component = 0
     concentration_eigenstrain_name = eigenstrain
+    use_displaced_mesh = false
   [../]
   [./mu_y]
     type = Stresschemicalpotential
@@ -142,6 +181,7 @@
     displacements = 'disp_x disp_y disp_z'
     component = 1
     concentration_eigenstrain_name = eigenstrain
+    use_displaced_mesh = false
   [../]
   [./mu_s]
     type = Stresschemicalpotential
@@ -151,6 +191,7 @@
     displacements = 'disp_x disp_y disp_z'
     component = 2
     concentration_eigenstrain_name = eigenstrain
+    use_displaced_mesh = false
   [../]
 
 []
@@ -187,6 +228,11 @@
     boundary = top
     value = 5.18e-5 # 5mA/cm^2 current density or 5.18e-4mol/m^2/s
   [../]
+  [./side_flux]
+    type = DiffusionFluxBC
+    variable = conc
+    boundary = 'left right front back'
+  [../]
 
 []
 
@@ -195,6 +241,7 @@
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 0.1
     poissons_ratio = 0.26
+    use_displaced_mesh = true
   [../]
   [./strain]
     type = ComputeFiniteStrain
@@ -208,7 +255,7 @@
     eigenstrain_name = eigenstrain
   [../]
   [./stress]
-    type = ComputeFiniteStrainElasticStress
+    type = ComputeKirchoffStress
   [../]
 
   [./heat]
@@ -219,21 +266,21 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '7.874e-5' #silicon in mol/(um^3)
+    prop_values = '7.874e-4' #silicon in mol/(um^3)
   [../]
 []
 [Preconditioning]
   [./SMP]
     type = SMP
-    # full = true
+    full = true
   [../]
 []
 [Executioner]
   type = Transient
   solve_type = 'PJFNK'
 
-  nl_rel_tol = 1e-6
-  # nl_abs_tol = 1e-11
+  nl_rel_tol = 1e-2
+  nl_abs_tol = 1e-5
 
   l_tol = 1e-3
 
