@@ -261,7 +261,7 @@
 
 [BCs]
   [./bottom_x]
-    type = PresetBC
+    type = Periodic
     variable = disp_x
     boundary = '3'
     value = 0.0
