@@ -27,8 +27,8 @@
 [MeshModifiers]
   [./center]
     type = BoundingBoxNodeSet
-    top_right = '0.01 0.01 0.0'
-    bottom_left = '-0.01 -0.01 0.0'
+    top_right = '0.001 0.001 0.0'
+    bottom_left = '-0.001 -0.001 0.0'
     new_boundary = 'center'
   [../]
 []
@@ -101,7 +101,7 @@
     type = DiffusionFluxAux
     variable = flux
     component = y
-    diffusivity = mobility
+    diffusivity = diffusion_coefficient
     diffusion_variable = conc
   [../]
   [./stress_11]
@@ -283,6 +283,21 @@
     full = true
   [../]
 []
+
+[Postprocessors]
+  [./ave_stress_22_top]
+    type = SideAverageValue
+    variable = stress_22
+    boundary = outer
+  [../]
+  [./ave_stress_11_top]
+    type = SideAverageValue
+    variable = stress_11
+    boundary = outer
+  [../]
+[]
+
+
 [Executioner]
   type = Transient
   solve_type = 'PJFNK'

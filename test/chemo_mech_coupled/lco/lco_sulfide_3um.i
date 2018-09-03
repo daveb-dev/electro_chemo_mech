@@ -327,7 +327,7 @@
 [Postprocessors]
   [./ave_stress_22_top]
     type = SideAverageValue
-    variable = stress_22
+    variable = stress_11
     boundary = 'top'
   [../]
   [./ave_stress_11_top]

@@ -16,22 +16,17 @@
   # ymin = 0.0
   # ymax = 2.0
   # dim = 2
-  type = ConcentricCircleMesh
-  num_sectors = 36
-  radii = '0.5 1.0 1.5 3.0'
-  rings = '2 5 15 10'
-  inner_mesh_fraction = '0.25'
-  has_outer_square = on
-  preserve_volumes = off
+  type = FileMesh
+  file = 'single_particle.msh'
 []
-[MeshModifiers]
-  [./center]
-    type = BoundingBoxNodeSet
-    top_right = '0.01 0.01 0.0'
-    bottom_left = '-0.01 -0.01 0.0'
-    new_boundary = 'center'
-  [../]
-[]
+# [MeshModifiers]
+#   [./center]
+#     type = BoundingBoxNodeSet
+#     top_right = '0.01 0.01 0.0'
+#     bottom_left = '-0.01 -0.01 0.0'
+#     new_boundary = 'center'
+#   [../]
+# []
 [Variables]
   [./disp_x]
     # scaling = 1.0e8
@@ -45,7 +40,7 @@
 
   [./conc]
     initial_condition = 1.0
-    scaling = 1e4
+    scaling = 1e2
   [../]
   [./mu_m]
     scaling = 1e-7
@@ -55,7 +50,7 @@
   [./flux_t]
     type = ParsedFunction
     vars = 'flux'
-    vals = '5.297e-6'
+    vals = '2.0e-4'
     value = 'if (t <= 3600, -1.0*flux, flux)'
   [../]
 []
@@ -167,6 +162,7 @@
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
+    block = 'inner'
   [../]
 
   [./stress_y]
@@ -178,7 +174,33 @@
     temperature = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
+    block = 'inner'
   [../]
+
+  [./stress_x2]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y'
+    component = 0
+    use_displaced_mesh = true
+    volumetric_locking_correction = true
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain_electrolyte
+    variable = disp_x
+    block = 'outer'
+  [../]
+
+  [./stress_y2]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y'
+    component = 1
+    use_displaced_mesh = true
+    volumetric_locking_correction = true
+    temperature = conc
+    concentration_eigenstrain_name = eigenstrain_electrolyte
+    variable = disp_y
+    block = 'outer'
+  [../]
+
 
   [./diff]
     type = ChemoDiffusion
@@ -200,6 +222,7 @@
     use_displaced_mesh = false
     displacements = 'disp_x disp_y'
     component = 0
+    block = 'inner'
   [../]
   [./mu_y]
     type = Stresschemicalpotential
@@ -210,35 +233,59 @@
     use_displaced_mesh = false
     displacements = 'disp_x disp_y'
     component = 1
+    block = 'inner'
   [../]
+  [./mu_x2]
+    type = Stresschemicalpotential
+    variable = mu_m
+    chemical_potential = mu_m
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain_electrolyte
+    displacements = 'disp_x disp_y'
+    component = 0
+    block = 'outer'
+  [../]
+
+  [./mu_y2]
+    type = Stresschemicalpotential
+    variable = mu_m
+    chemical_potential = mu_m
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain_electrolyte
+    displacements = 'disp_x disp_y'
+    component = 1
+    block = 'outer'
+  [../]
+
 []
 
 [BCs]
   [./bottom_x]
     type = PresetBC
     variable = disp_x
-    boundary = center
+    boundary = '3'
     value = 0.0
   [../]
   [./bottom_y]
     type = PresetBC
     variable = disp_y
-    boundary = center
+    boundary = '3'
     value = 0.0
   [../]
-  # [./bottom_conc]
-  #   type = DirichletBC
-  #   variable = conc
-  #   boundary = 2
-  #   value = 0.01
-  # [../]
-  [./bottom_flux]
+  [./li_current]
     type = FunctionNeumannBC
     variable = conc
-    boundary = outer
+    boundary = 'inner'
     function = flux_t
+    use_displaced_mesh = false
   [../]
-
+  # [./const_conc_boundary]
+  #   type = DiffusionFluxBC
+  #   use_displaced_mesh = false
+  #
+  #   variable = conc
+  #   boundary = 'top left bot right'
+  # [../]
 []
 
 [Materials]
@@ -246,11 +293,27 @@
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 0.19
     poissons_ratio = 0.24
+    block = 'inner'
   [../]
+
+  [./elasticity_tensor_electrolyte]
+    type = ComputeIsotropicElasticityTensor
+    youngs_modulus = 0.015
+    poissons_ratio = 0.24
+    block = 'outer'
+  [../]
+
   [./strain]
     type = ComputeFiniteStrain
     eigenstrain_names = eigenstrain
+    block = 'inner'
   [../]
+  [./strain_electrolyte]
+    type = ComputeFiniteStrain
+    eigenstrain_names = eigenstrain_electrolyte
+    block = 'outer'
+  [../]
+
   [./conc_strain]
     type = ComputeConcentrationEigenstrain
     concentration = conc
@@ -258,7 +321,19 @@
     partial_molar_volume = -0.05
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
+    block = 'inner'
   [../]
+
+  [./conc_strain_electrolyte]
+    type = ComputeConcentrationEigenstrain
+    concentration = conc
+    stress_free_concentration = 1.0
+    partial_molar_volume = 0.0
+    eigenstrain_name = eigenstrain_electrolyte
+    use_displaced_mesh = false
+    block = 'outer'
+  [../]
+
   [./stress]
     type = ComputeKirchoffStress
   [../]
@@ -270,25 +345,67 @@
     gas_constant = 8.314e-3
     temperature = 298
     use_displaced_mesh = false
+    block = 'inner'
   [../]
+  [./heat_electrolyte]
+    type = DiffusionMaterial
+    diffusion_coefficient = 1.0
+    activity_coefficient = 1.0
+    gas_constant = 8.314e-3
+    temperature = 298
+    use_displaced_mesh = false
+    block = 'outer'
+  [../]
+
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
     prop_values = '1.0e-7' #silicon in mol/(m^3)
+    block = 'inner'
   [../]
+
+  [./density_electrolyte]
+    type = GenericConstantMaterial
+    prop_names = 'density'
+    prop_values = '1.0' #silicon in mol/(m^3)
+    block = 'outer'
+  [../]
+
 []
 [Preconditioning]
   [./SMP]
     type = SMP
     full = true
+    petsc_options_iname = '-pc_type'
+    petsc_options_value = 'lu'
   [../]
 []
+
+[Postprocessors]
+  [./ave_stress_22_top]
+    type = SideAverageValue
+    variable = stress_22
+    boundary = 'top'
+  [../]
+  [./ave_stress_11_top]
+    type = SideAverageValue
+    variable = stress_11
+    boundary = 'top'
+  [../]
+  [./ave_conc_inner]
+    type = AverageNodalVariableValue
+    variable = conc
+    boundary = 'inner'
+  [../]
+[]
+
+
 [Executioner]
   type = Transient
   solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-3
-  nl_abs_tol = 1e-4
+  nl_abs_tol = 1e-6
 
   l_tol = 1e-2
 
@@ -304,4 +421,5 @@
 [Outputs]
   exodus = true
   print_linear_residuals = true
+  csv = true
 []
