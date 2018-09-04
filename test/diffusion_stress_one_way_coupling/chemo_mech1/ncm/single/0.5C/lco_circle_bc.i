@@ -17,17 +17,16 @@
   # ymax = 2.0
   # dim = 2
   type = FileMesh
-  file = 'single.msh'
+  file = 'single_particle.msh'
 []
-[MeshModifiers]
-  [./center]
-    type = BoundingBoxNodeSet
-    top_right = '0.05 0.05 0.0'
-    bottom_left = '-0.05 -0.05 0.0'
-    new_boundary = 'center'
-  [../]
-[]
-
+# [MeshModifiers]
+#   [./center]
+#     type = BoundingBoxNodeSet
+#     top_right = '0.01 0.01 0.0'
+#     bottom_left = '-0.01 -0.01 0.0'
+#     new_boundary = 'center'
+#   [../]
+# []
 [Variables]
   [./disp_x]
     # scaling = 1.0e8
@@ -41,31 +40,23 @@
 
   [./conc]
     initial_condition = 1.0
-    scaling = 1e-1
+    scaling = 1e2
   [../]
   [./mu_m]
-    scaling = 1e-18
+    scaling = 1e-7
   [../]
 []
 [Functions]
   [./flux_t]
     type = ParsedFunction
-    vars = 'flux period offset'
-    vals = 'flux_rate t_period 200.0'
-    value = '-flux*(-1)^(floor(2.0*t/period))'
+    vars = 'flux'
+    vals = '1.0e-4'
+    value = 'if (t <= 7200, -1.0*flux, flux)'
   [../]
 []
 
 [AuxVariables]
-  [./pressure]
-  [../]
-
-  [./flux_x]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-
-  [./flux_y]
+  [./flux]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -98,43 +89,16 @@
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./stress_rr]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./stress_tt]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./stress_rt]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
 
 []
 [AuxKernels]
-  [./pressure]
-    type = ConstantAux
-    variable = pressure
-    value = pressure_value
-  [../]
-
-  [./flux_x]
+  [./flux]
     type = DiffusionFluxAux
-    variable = flux_x
-    component = x
-    diffusivity = mobility
-    diffusion_variable = conc
-  [../]
-
-  [./flux_y]
-    type = DiffusionFluxAux
-    variable = flux_y
+    variable = flux
     component = y
     diffusivity = mobility
     diffusion_variable = conc
   [../]
-
   [./stress_11]
     type = RankTwoAux
     variable = stress_11
@@ -183,30 +147,8 @@
     variable = vol_strain
     scalar_type = VolumetricStrain
   [../]
-  [./stress_rr]
-    type = CylindricalRankTwoAux
-    variable = stress_rr
-    rank_two_tensor = stress
-    index_j = 0
-    index_i = 0
-    center_point = '0 0 0'
-  [../]
-  [./stress_tt]
-    type = CylindricalRankTwoAux
-    variable = stress_tt
-    rank_two_tensor = stress
-    index_j = 1
-    index_i = 1
-    center_point = '0 0 0'
-  [../]
-  [./stress_rt]
-    type = CylindricalRankTwoAux
-    variable = stress_rt
-    rank_two_tensor = stress
-    index_j = 0
-    index_i = 1
-    center_point = '0 0 0'
-  [../]
+
+
 []
 
 
@@ -318,24 +260,16 @@
 []
 
 [BCs]
-  [./CoupledPressure]
-    [./tb]
-      boundary = 'top bot'
-      pressure = pressure
-      displacements = 'disp_x disp_y'
-    [../]
-  [../]
-
   [./bottom_x]
     type = PresetBC
     variable = disp_x
-    boundary = 'center'
+    boundary = '3'
     value = 0.0
   [../]
   [./bottom_y]
     type = PresetBC
     variable = disp_y
-    boundary = 'center'
+    boundary = '3'
     value = 0.0
   [../]
   [./li_current]
@@ -345,6 +279,13 @@
     function = flux_t
     use_displaced_mesh = false
   [../]
+  # [./const_conc_boundary]
+  #   type = DiffusionFluxBC
+  #   use_displaced_mesh = false
+  #
+  #   variable = conc
+  #   boundary = 'top left bot right'
+  # [../]
 []
 
 [Materials]
@@ -377,7 +318,7 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.07
+    partial_molar_volume = -0.05
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
     block = 'inner'
@@ -456,32 +397,6 @@
     variable = conc
     boundary = 'inner'
   [../]
-  [./ave_stress_22_right]
-    type = SideAverageValue
-    variable = stress_22
-    boundary = 'right'
-  [../]
-  [./ave_stress_11_right]
-    type = SideAverageValue
-    variable = stress_11
-    boundary = 'right'
-  [../]
-  [./ave_interface_stress_rr]
-    type = SideAverageValue
-    variable = stress_rr
-    boundary = 'inner'
-  [../]
-  [./ave_interface_stress_tt]
-    type = SideAverageValue
-    variable = stress_tt
-    boundary = 'inner'
-  [../]
-  [./ave_interface_stress_rt]
-    type = SideAverageValue
-    variable = stress_rt
-    boundary = 'inner'
-  [../]
-
 []
 
 
@@ -497,7 +412,7 @@
   l_max_its = 100
 
   dt = 200
-  end_time = total_time
+  end_time = 14400.0
 []
 [Debug]
   # show_material_props = true

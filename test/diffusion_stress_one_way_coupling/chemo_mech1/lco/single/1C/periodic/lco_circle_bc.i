@@ -27,7 +27,6 @@
     new_boundary = 'center'
   [../]
 []
-
 [Variables]
   [./disp_x]
     # scaling = 1.0e8
@@ -51,21 +50,15 @@
   [./flux_t]
     type = ParsedFunction
     vars = 'flux period offset'
-    vals = 'flux_rate t_period 200.0'
-    value = '-flux*(-1)^(floor(2.0*t/period))'
+    vals = '0.0001 7200.0 200.0'
+    value = '-flux*(-1)^(floor(2.0*(t-offset)/period))'
   [../]
 []
 
 [AuxVariables]
   [./pressure]
   [../]
-
-  [./flux_x]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-
-  [./flux_y]
+  [./flux]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -116,25 +109,16 @@
   [./pressure]
     type = ConstantAux
     variable = pressure
-    value = pressure_value
+    value = 70e-6
   [../]
 
-  [./flux_x]
+  [./flux]
     type = DiffusionFluxAux
-    variable = flux_x
-    component = x
-    diffusivity = mobility
-    diffusion_variable = conc
-  [../]
-
-  [./flux_y]
-    type = DiffusionFluxAux
-    variable = flux_y
+    variable = flux
     component = y
     diffusivity = mobility
     diffusion_variable = conc
   [../]
-
   [./stress_11]
     type = RankTwoAux
     variable = stress_11
@@ -325,11 +309,10 @@
       displacements = 'disp_x disp_y'
     [../]
   [../]
-
   [./bottom_x]
     type = PresetBC
     variable = disp_x
-    boundary = 'center'
+    boundary = '3 center'
     value = 0.0
   [../]
   [./bottom_y]
@@ -345,6 +328,14 @@
     function = flux_t
     use_displaced_mesh = false
   [../]
+
+  # [./const_conc_boundary]
+  #   type = DiffusionFluxBC
+  #   use_displaced_mesh = false
+  #
+  #   variable = conc
+  #   boundary = 'top left bot right'
+  # [../]
 []
 
 [Materials]
@@ -377,7 +368,7 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.07
+    partial_molar_volume = -0.05
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
     block = 'inner'
@@ -419,7 +410,7 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-7' #silicon in mol/(m^3)
+    prop_values = '1.0e-9' #silicon in mol/(m^3)
     block = 'inner'
   [../]
 
@@ -481,7 +472,6 @@
     variable = stress_rt
     boundary = 'inner'
   [../]
-
 []
 
 
@@ -497,7 +487,7 @@
   l_max_its = 100
 
   dt = 200
-  end_time = total_time
+  end_time = 14600.0
 []
 [Debug]
   # show_material_props = true

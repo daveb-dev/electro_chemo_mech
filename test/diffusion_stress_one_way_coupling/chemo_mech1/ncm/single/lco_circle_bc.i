@@ -350,7 +350,7 @@
 [Materials]
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 0.19
+    youngs_modulus = 0.199
     poissons_ratio = 0.24
     block = 'inner'
   [../]
@@ -377,7 +377,7 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.07
+    partial_molar_volume = 0.07
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
     block = 'inner'

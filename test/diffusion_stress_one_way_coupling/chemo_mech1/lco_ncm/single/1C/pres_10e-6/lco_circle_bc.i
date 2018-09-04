@@ -51,7 +51,7 @@
   [./flux_t]
     type = ParsedFunction
     vars = 'flux period offset'
-    vals = 'flux_rate t_period 200.0'
+    vals = '0.0001 7200.0 200.0'
     value = '-flux*(-1)^(floor(2.0*t/period))'
   [../]
 []
@@ -116,7 +116,7 @@
   [./pressure]
     type = ConstantAux
     variable = pressure
-    value = pressure_value
+    value = 10e-6
   [../]
 
   [./flux_x]
@@ -497,7 +497,7 @@
   l_max_its = 100
 
   dt = 200
-  end_time = total_time
+  end_time = 7200.0
 []
 [Debug]
   # show_material_props = true
