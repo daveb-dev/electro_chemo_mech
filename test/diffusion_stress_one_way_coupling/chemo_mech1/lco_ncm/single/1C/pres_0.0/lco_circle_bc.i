@@ -259,6 +259,31 @@
     block = 'outer'
   [../]
 
+  [./stress_x3]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y'
+    component = 0
+    use_displaced_mesh = true
+    volumetric_locking_correction = true
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain_inner2
+    variable = disp_x
+    block = 'inner2'
+  [../]
+
+  [./stress_y3]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y'
+    component = 1
+    use_displaced_mesh = true
+    volumetric_locking_correction = true
+    temperature = conc
+    concentration_eigenstrain_name = eigenstrain_inner2
+    variable = disp_y
+    block = 'inner2'
+  [../]
+
+
 
   [./diff]
     type = ChemoDiffusion
@@ -315,6 +340,29 @@
     block = 'outer'
   [../]
 
+  [./mu_x3]
+    type = Stresschemicalpotential
+    variable = mu_m
+    chemical_potential = mu_m
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain_inner2
+    displacements = 'disp_x disp_y'
+    component = 0
+    block = 'inner2'
+  [../]
+
+  [./mu_y3]
+    type = Stresschemicalpotential
+    variable = mu_m
+    chemical_potential = mu_m
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain_inner2
+    displacements = 'disp_x disp_y'
+    component = 1
+    block = 'inner2'
+  [../]
+
+
 []
 
 [BCs]
@@ -352,7 +400,7 @@
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 0.19
     poissons_ratio = 0.24
-    block = 'inner'
+    block = 'inner inner2'
   [../]
 
   [./elasticity_tensor_electrolyte]
@@ -367,11 +415,19 @@
     eigenstrain_names = eigenstrain
     block = 'inner'
   [../]
+
   [./strain_electrolyte]
     type = ComputeFiniteStrain
     eigenstrain_names = eigenstrain_electrolyte
     block = 'outer'
   [../]
+
+  [./strain_2]
+    type = ComputeFiniteStrain
+    eigenstrain_names = eigenstrain_inner2
+    block = 'inner2'
+  [../]
+
 
   [./conc_strain]
     type = ComputeConcentrationEigenstrain
@@ -383,6 +439,15 @@
     block = 'inner'
   [../]
 
+  [./conc_strain2]
+    type = ComputeConcentrationEigenstrain
+    concentration = conc
+    stress_free_concentration = 1.0
+    partial_molar_volume = 0.07
+    eigenstrain_name = eigenstrain_inner2
+    use_displaced_mesh = false
+    block = 'inner2'
+  [../]
   [./conc_strain_electrolyte]
     type = ComputeConcentrationEigenstrain
     concentration = conc
@@ -404,7 +469,7 @@
     gas_constant = 8.314e-3
     temperature = 298
     use_displaced_mesh = false
-    block = 'inner'
+    block = 'inner inner2'
   [../]
   [./heat_electrolyte]
     type = DiffusionMaterial
@@ -420,7 +485,7 @@
     type = GenericConstantMaterial
     prop_names = 'density'
     prop_values = '1.0e-7' #silicon in mol/(m^3)
-    block = 'inner'
+    block = 'inner inner2'
   [../]
 
   [./density_electrolyte]

@@ -1,4 +1,6 @@
 #Run with 4 procs
+# Fully constrained system. Constrained in bottom_x, constrained in y on both sides
+# Pressure applied on top
 [GlobalParams]
   displacements = 'disp_x disp_y '
   # temperature = conc
@@ -19,14 +21,14 @@
   type = FileMesh
   file = 'single.msh'
 []
-[MeshModifiers]
-  [./center]
-    type = BoundingBoxNodeSet
-    top_right = '0.05 0.05 0.0'
-    bottom_left = '-0.05 -0.05 0.0'
-    new_boundary = 'center'
-  [../]
-[]
+# [MeshModifiers]
+#   [./center]
+#     type = BoundingBoxNodeSet
+#     top_right = '0.05 0.05 0.0'
+#     bottom_left = '-0.05 -0.05 0.0'
+#     new_boundary = 'center'
+#   [../]
+# []
 
 [Variables]
   [./disp_x]
@@ -58,6 +60,15 @@
 
 [AuxVariables]
   [./pressure]
+  [../]
+
+  [./output_pressure]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./axial_direction]
+    order = CONSTANT
+    family = MONOMIAL
   [../]
 
   [./flux_x]
@@ -207,6 +218,19 @@
     index_i = 1
     center_point = '0 0 0'
   [../]
+  [./output_pressure]
+    type = RankTwoScalarAux
+    rank_two_tensor = stress
+    scalar_type = Hydrostatic
+    variable = output_pressure
+  [../]
+  [./axial_stress]
+    type = RankTwoScalarAux
+    rank_two_tensor = stress
+    scalar_type = AxialStress
+    variable = axial_direction
+    direction = '0 1 0'
+  [../]
 []
 
 
@@ -320,22 +344,22 @@
 [BCs]
   [./CoupledPressure]
     [./tb]
-      boundary = 'top bot'
+      boundary = 'top'
       pressure = pressure
       displacements = 'disp_x disp_y'
     [../]
   [../]
 
-  [./bottom_x]
-    type = PresetBC
-    variable = disp_x
-    boundary = 'center'
-    value = 0.0
-  [../]
   [./bottom_y]
     type = PresetBC
     variable = disp_y
-    boundary = 'center'
+    boundary = 'bot'
+    value = 0.0
+  [../]
+  [./side_x]
+    type = PresetBC
+    variable = disp_x
+    boundary = 'left right'
     value = 0.0
   [../]
   [./li_current]
@@ -419,7 +443,7 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-7' #silicon in mol/(m^3)
+    prop_values = '1.0e-9' #silicon in mol/(m^3)
     block = 'inner'
   [../]
 
@@ -441,25 +465,10 @@
 []
 
 [Postprocessors]
-  [./ave_stress_22_top]
-    type = SideAverageValue
-    variable = stress_22
-    boundary = 'top'
-  [../]
-  [./ave_stress_11_top]
-    type = SideAverageValue
-    variable = stress_11
-    boundary = 'top'
-  [../]
   [./ave_conc_inner]
     type = AverageNodalVariableValue
     variable = conc
     boundary = 'inner'
-  [../]
-  [./ave_stress_22_right]
-    type = SideAverageValue
-    variable = stress_22
-    boundary = 'right'
   [../]
   [./ave_stress_11_right]
     type = SideAverageValue
@@ -481,7 +490,11 @@
     variable = stress_rt
     boundary = 'inner'
   [../]
-
+  [./axial_stress]
+    type = SideAverageValue
+    variable = axial_direction
+    boundary = 'bot'
+  [../]
 []
 
 

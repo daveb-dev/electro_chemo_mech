@@ -17,11 +17,20 @@ do
       if [ -d $dir/$pr ]
       then
         echo "pressure directory exists"
+        if [ -d $dir/$pr/constrained ]
+        then
+           echo "constrained directory exists"
+           # rm -f $dir/$pr/constrained/*csv
+           # rm -f $dir/$pr/constrained/*e
+        else
+          mkdir $dir/$pr/constrained
+        fi
       else
         mkdir $dir/$pr
+        mkdir constrained
       fi
       pwd
-      sed "s/flux_rate/$flux_rate/g" lco_circle_bc.i | sed "s/t_period/$period/g" | sed "s/total_time/$total_time/g" | sed "s/pressure_value/$j/g" > $dir/$pr/lco_circle_bc.i
-      cp *msh $dir/$pr
+      sed "s/flux_rate/$flux_rate/g" lco_circle_bc.i | sed "s/t_period/$period/g" | sed "s/total_time/$total_time/g" | sed "s/pressure_value/$j/g" > $dir/$pr/constrained/lco_circle_bc.i
+      cp *msh $dir/$pr/constrained
     done
 done

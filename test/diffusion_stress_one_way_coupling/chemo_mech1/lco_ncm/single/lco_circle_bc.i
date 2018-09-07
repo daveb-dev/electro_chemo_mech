@@ -17,7 +17,7 @@
   # ymax = 2.0
   # dim = 2
   type = FileMesh
-  file = 'single.msh'
+  file = 'single_c.msh'
 []
 [MeshModifiers]
   [./center]
