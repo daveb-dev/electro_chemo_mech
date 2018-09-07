@@ -43,10 +43,10 @@
 
   [./conc]
     initial_condition = 1.0
-    scaling = 1e-1
+    scaling = 1e-2
   [../]
   [./mu_m]
-    scaling = 1e-18
+    scaling = 1e-10
   [../]
 []
 [Functions]
@@ -240,7 +240,7 @@
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
@@ -252,7 +252,7 @@
     displacements = 'disp_x disp_y'
     component = 1
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     temperature = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
@@ -264,7 +264,7 @@
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
     variable = disp_x
@@ -276,7 +276,7 @@
     displacements = 'disp_x disp_y'
     component = 1
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     temperature = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
     variable = disp_y
@@ -287,6 +287,7 @@
   [./diff]
     type = ChemoDiffusion
     variable = conc
+    stress_based_chemical_potential = mu_m
     use_displaced_mesh = false
     diffusion_coefficient = diffusion_coefficient
   [../]
@@ -301,7 +302,7 @@
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     chemical_potential = mu_m
-    use_displaced_mesh = false
+    use_displaced_mesh = true
     displacements = 'disp_x disp_y'
     component = 0
     block = 'inner'
@@ -312,7 +313,7 @@
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     chemical_potential = mu_m
-    use_displaced_mesh = false
+    use_displaced_mesh = true
     displacements = 'disp_x disp_y'
     component = 1
     block = 'inner'
@@ -326,6 +327,7 @@
     displacements = 'disp_x disp_y'
     component = 0
     block = 'outer'
+    use_displaced_mesh = true
   [../]
 
   [./mu_y2]
@@ -337,6 +339,7 @@
     displacements = 'disp_x disp_y'
     component = 1
     block = 'outer'
+    use_displaced_mesh = true
   [../]
 
 []
@@ -401,9 +404,9 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.07
+    partial_molar_volume = -0.4
     eigenstrain_name = eigenstrain
-    use_displaced_mesh = false
+    use_displaced_mesh = true
     block = 'inner'
   [../]
 
@@ -413,7 +416,7 @@
     stress_free_concentration = 1.0
     partial_molar_volume = 0.0
     eigenstrain_name = eigenstrain_electrolyte
-    use_displaced_mesh = false
+    use_displaced_mesh = true
     block = 'outer'
   [../]
 
@@ -443,7 +446,7 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-9' #silicon in mol/(m^3)
+    prop_values = '1.0e-2' #silicon in mol/(m^3)
     block = 'inner'
   [../]
 
@@ -500,10 +503,10 @@
 
 [Executioner]
   type = Transient
-  solve_type = 'PJFNK'
+  solve_type = NEWTON
 
   nl_rel_tol = 1e-3
-  nl_abs_tol = 1e-6
+  # nl_abs_tol = 1e-6
 
   l_tol = 1e-2
 

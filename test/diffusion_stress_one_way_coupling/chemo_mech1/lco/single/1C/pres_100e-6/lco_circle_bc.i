@@ -44,7 +44,7 @@
     scaling = 1e-1
   [../]
   [./mu_m]
-    scaling = 1e-18
+    scaling = 1e2
   [../]
 []
 [Functions]
@@ -377,7 +377,7 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.07
+    partial_molar_volume = -0.15
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
     block = 'inner'
@@ -419,7 +419,7 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-7' #silicon in mol/(m^3)
+    prop_values = '1.0e-8' #silicon in mol/(m^3)
     block = 'inner'
   [../]
 
@@ -490,7 +490,7 @@
   solve_type = 'PJFNK'
 
   nl_rel_tol = 1e-3
-  nl_abs_tol = 1e-6
+  nl_abs_tol = 1e-7
 
   l_tol = 1e-2
 
