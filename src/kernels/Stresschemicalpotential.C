@@ -80,7 +80,7 @@ Stresschemicalpotential::computeQpResidual()
 {
     Real J = _deformation_gradient[_qp].det();
     RankTwoTensor kirchoff_stress = _stress[_qp]*J;
-    return (_u[_qp] + (1.0/_density[_qp])*_stress[_qp].doubleContraction((*_deigenstrain_dC)[_qp]))
+    return (_u[_qp] + (1.0/_density[_qp])*kirchoff_stress.doubleContraction((*_deigenstrain_dC)[_qp]))
             *_test[_i][_qp];
     
 //    return 0.0;
@@ -96,7 +96,7 @@ Real
 Stresschemicalpotential::computeQpOffDiagJacobian(unsigned int jvar)
 {
     Real J = _deformation_gradient[_qp].det();
-    const RankTwoTensor I(RankTwoTensor::initIdentity);    
+    const RankTwoTensor I(RankTwoTensor::initIdentity);   
 //    RankTwoTensor dstress_dc = _elasticity_tensor[_qp]*((*_deigenstrain_dC)[_qp]*I);
     if (jvar == _conc_var)
     {

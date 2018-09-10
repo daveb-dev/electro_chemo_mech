@@ -36,10 +36,10 @@
 
   [./conc]
     initial_condition = 1.0
-    scaling = 1e1
+    scaling = 1e3
   [../]
   [./mu_m]
-    scaling = 1e-10
+    scaling = 1e-12
   [../]
 []
 [Functions]
@@ -352,7 +352,7 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-4' #silicon in mol/(m^3)
+    prop_values = '1.0e-3' #silicon in mol/(m^3)
   [../]
 
 []
