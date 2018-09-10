@@ -46,7 +46,7 @@
     scaling = 1e-2
   [../]
   [./mu_m]
-    scaling = 1e-10
+    scaling = 1e-3
   [../]
 []
 [Functions]
@@ -446,7 +446,7 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-2' #silicon in mol/(m^3)
+    prop_values = '1.0' #silicon in mol/(m^3)
     block = 'inner'
   [../]
 
@@ -506,7 +506,7 @@
   solve_type = NEWTON
 
   nl_rel_tol = 1e-3
-  # nl_abs_tol = 1e-6
+  nl_abs_tol = 1e-6
 
   l_tol = 1e-2
 

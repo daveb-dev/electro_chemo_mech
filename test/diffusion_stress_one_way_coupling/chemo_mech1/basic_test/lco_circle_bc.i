@@ -8,7 +8,7 @@
 [Mesh]
   type = ConcentricCircleMesh
   radii = "0.5 1.0 1.5"
-  rings = "2 5 15"
+  rings = "5 5 15"
   inner_mesh_fraction = "0.25"
   num_sectors = 30
   has_outer_square = off
@@ -36,10 +36,10 @@
 
   [./conc]
     initial_condition = 1.0
-    scaling = 1e-1
+    scaling = 1e1
   [../]
   [./mu_m]
-    scaling = 1e-2
+    scaling = 1e-10
   [../]
 []
 [Functions]
@@ -233,7 +233,7 @@
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
@@ -331,7 +331,7 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.14
+    partial_molar_volume = -0.2
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
   [../]
@@ -352,7 +352,7 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-7' #silicon in mol/(m^3)
+    prop_values = '1.0e-4' #silicon in mol/(m^3)
   [../]
 
 []
@@ -385,7 +385,7 @@
 
 [Executioner]
   type = Transient
-  solve_type = 'PJFNK'
+  solve_type = NEWTON
   # line_search = l2
   nl_rel_tol = 1e-2
   nl_abs_tol = 1e-6

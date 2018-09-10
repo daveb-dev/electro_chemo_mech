@@ -310,7 +310,7 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.14
+    partial_molar_volume = -0.2
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
   [../]
