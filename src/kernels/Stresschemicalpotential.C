@@ -97,7 +97,8 @@ Stresschemicalpotential::computeQpOffDiagJacobian(unsigned int jvar)
 {
     Real J = _deformation_gradient[_qp].det();
     const RankTwoTensor I(RankTwoTensor::initIdentity);   
-    RankTwoTensor dstress_dc = -_elasticity_tensor[_qp]*((*_deigenstrain_dC)[_qp]*I);
+    RankTwoTensor dstress_dc = ElasticityTensorTools::getIsotropicBulkModulus(_elasticity_tensor[_qp])*((*_deigenstrain_dC)[_qp]);
+    Real tt = dstress_dc.trace() * (*_deigenstrain_dC)[_qp].trace();
     if (jvar == _conc_var)
     {
 //        return -dstress_dc.trace() * _phi[_j][_qp] * _test[_i][_qp]/_density[_qp]/3.0;
@@ -106,7 +107,7 @@ Stresschemicalpotential::computeQpOffDiagJacobian(unsigned int jvar)
 //        {
 //            Real resid = ((_stress[_qp] - _stress_old[_qp]).trace())/deltac
 //                    *((*_deigenstrain_dC)[_qp]).trace(); // /_density[_qp];
-            Real resid = dstress_dc.trace()/3.0;
+            Real resid = tt;
             resid *= _phi[_j][_qp] * _test[_i][_qp];
             return resid;
 //        }

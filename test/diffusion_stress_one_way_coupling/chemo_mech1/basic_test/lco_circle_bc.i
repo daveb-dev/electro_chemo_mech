@@ -6,19 +6,19 @@
 []
 
 [Mesh]
-  dim = 2
-  type = GeneratedMesh
-  xmax = 1.0
-  xmin = 0.0
-  nx = 10
-  ny = 10
-  # type = ConcentricCircleMesh
-  # radii = "0.5 1.0 1.5"
-  # rings = "2 5 15"
-  # inner_mesh_fraction = "0.25"
-  # num_sectors = 30
-  # has_outer_square = off
-  # preserve_volumes = off
+  # dim = 2
+  # type = GeneratedMesh
+  # xmax = 1.0
+  # xmin = 0.0
+  # nx = 10
+  # ny = 10
+  type = ConcentricCircleMesh
+  radii = "0.5 1.0 1.5"
+  rings = "2 5 15"
+  inner_mesh_fraction = "0.25"
+  num_sectors = 30
+  has_outer_square = off
+  preserve_volumes = off
 []
 [MeshModifiers]
   [./center]
@@ -315,7 +315,7 @@
   [./li_current]
     type = FunctionNeumannBC
     variable = conc
-    boundary = right
+    boundary = outer
     function = flux_t
     use_displaced_mesh = false
   [../]
@@ -337,7 +337,7 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 0.0
-    partial_molar_volume = 0.1
+    partial_molar_volume = 0.7
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
   [../]
@@ -395,7 +395,7 @@
 
 [Executioner]
   type = Transient
-  solve_type = PJFNK
+  solve_type = NEWTON
   # line_search = l2
   nl_rel_tol = 1e-2
   # nl_abs_tol = 1e-6
