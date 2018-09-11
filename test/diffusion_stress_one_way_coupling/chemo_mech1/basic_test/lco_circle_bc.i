@@ -6,13 +6,19 @@
 []
 
 [Mesh]
-  type = ConcentricCircleMesh
-  radii = "0.5 1.0 1.5"
-  rings = "5 5 15"
-  inner_mesh_fraction = "0.25"
-  num_sectors = 30
-  has_outer_square = off
-  preserve_volumes = off
+  dim = 2
+  type = GeneratedMesh
+  xmax = 1.0
+  xmin = 0.0
+  nx = 10
+  ny = 10
+  # type = ConcentricCircleMesh
+  # radii = "0.5 1.0 1.5"
+  # rings = "2 5 15"
+  # inner_mesh_fraction = "0.25"
+  # num_sectors = 30
+  # has_outer_square = off
+  # preserve_volumes = off
 []
 [MeshModifiers]
   [./center]
@@ -35,11 +41,12 @@
   # [../]
 
   [./conc]
-    initial_condition = 1.0
-    scaling = 1e3
+    # initial_condition = 1.0
+    scaling = 1e1
   [../]
   [./mu_m]
-    scaling = 1e-12
+    # initial_condition = 10000.0
+     scaling = 1e-3
   [../]
 []
 [Functions]
@@ -47,7 +54,7 @@
     type = ParsedFunction
     vars = 'flux period offset'
     vals = '0.0001 7200.0 0.0'
-    value = '-flux*(-1)^(floor(2.0*t/period))'
+    value = 'flux*(-1)^(floor(2.0*t/period))'
   [../]
 []
 
@@ -245,7 +252,7 @@
     component = 1
     use_displaced_mesh = true
     volumetric_locking_correction = false
-    temperature = conc
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
   [../]
@@ -253,7 +260,7 @@
   [./diff]
     type = ChemoDiffusion
     variable = conc
-    stress_based_chemical_potential = mu_m
+
     use_displaced_mesh = false
     diffusion_coefficient = diffusion_coefficient
   [../]
@@ -265,9 +272,9 @@
   [./mu_x]
     type = Stresschemicalpotential
     variable = mu_m
+    chemical_potential = mu_m
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
-    chemical_potential = mu_m
     use_displaced_mesh = true
     displacements = 'disp_x disp_y'
     component = 0
@@ -275,14 +282,13 @@
   [./mu_y]
     type = Stresschemicalpotential
     variable = mu_m
+    chemical_potential = mu_m
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
-    chemical_potential = mu_m
     use_displaced_mesh = true
     displacements = 'disp_x disp_y'
     component = 1
   [../]
-
 []
 
 [BCs]
@@ -309,7 +315,7 @@
   [./li_current]
     type = FunctionNeumannBC
     variable = conc
-    boundary = outer
+    boundary = right
     function = flux_t
     use_displaced_mesh = false
   [../]
@@ -330,8 +336,8 @@
   [./conc_strain]
     type = ComputeConcentrationEigenstrain
     concentration = conc
-    stress_free_concentration = 1.0
-    partial_molar_volume = -0.2
+    stress_free_concentration = 0.0
+    partial_molar_volume = 0.1
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
   [../]
@@ -344,7 +350,7 @@
     type = DiffusionMaterial
     diffusion_coefficient = 5.0e-4
     activity_coefficient = 1.0
-    gas_constant = 8.314e-3
+    gas_constant = 8.314e9
     temperature = 298
     use_displaced_mesh = false
   [../]
@@ -352,18 +358,18 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-3' #silicon in mol/(m^3)
+    prop_values = '1.0e-13' #silicon in mol/(m^3)
   [../]
 
 []
 
 
 [Postprocessors]
-  [./ave_conc_inner]
-    type = AverageNodalVariableValue
-    variable = conc
-    boundary = outer
-  [../]
+  # [./ave_conc_inner]
+  #   type = AverageNodalVariableValue
+  #   variable = conc
+  #   boundary = outer
+  # [../]
 []
 
 [Preconditioning]
@@ -381,20 +387,24 @@
     petsc_options_iname = '-pc_type -sub_pc_type -sub_pc_factor_shift_type -pc_asm_overlap'
     petsc_options_value = ' asm      lu           NONZERO                   2'
   [../]
+  [./fdp]
+    type = FDP
+    full = true
+  [../]
 []
 
 [Executioner]
   type = Transient
-  solve_type = NEWTON
+  solve_type = PJFNK
   # line_search = l2
   nl_rel_tol = 1e-2
-  nl_abs_tol = 1e-6
+  # nl_abs_tol = 1e-6
 
   l_tol = 1e-2
 
   l_max_its = 100
 
-  dt = 200
+  dt = 50
   end_time = 7200.0
   compute_initial_residual_before_preset_bcs = true
 []

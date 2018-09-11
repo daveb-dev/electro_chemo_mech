@@ -229,23 +229,23 @@
 
 [Kernels]
   [./stress_x]
-    type = StressDivergenceTensors
+    type = StressDivergenceConcentrationTensors
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
   [../]
 
   [./stress_y]
-    type = StressDivergenceTensors
+    type = StressDivergenceConcentrationTensors
     displacements = 'disp_x disp_y'
     component = 1
     use_displaced_mesh = true
-    volumetric_locking_correction = true
-    temperature = conc
+    volumetric_locking_correction = false
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
   [../]
@@ -323,7 +323,7 @@
     type = DiffusionMaterial
     diffusion_coefficient = 5.0e-4
     activity_coefficient = 1.0
-    gas_constant = 8.314e-3
+    gas_constant = 8.314e9
     temperature = 298
     use_displaced_mesh = false
   [../]
@@ -331,7 +331,7 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-8' #silicon in mol/(m^3)
+    prop_values = '1.0e-14' #silicon in mol/(m^3)
   [../]
 
 []

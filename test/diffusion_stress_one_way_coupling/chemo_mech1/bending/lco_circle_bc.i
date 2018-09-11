@@ -2,7 +2,7 @@
 # Fully constrained system. Constrained in bottom_x, constrained in y on both sides
 # Pressure applied on top
 [GlobalParams]
-  displacements = 'disp_x disp_y '
+  displacements = 'disp_x disp_y'
 []
 
 [Mesh]
@@ -42,10 +42,10 @@
 
   [./conc]
     initial_condition = 0.5
-    scaling = 1e2
+    scaling = 1e3
   [../]
   [./mu_m]
-    scaling = 1e-8
+    scaling = 1e-14
   [../]
 []
 [Functions]
@@ -57,7 +57,7 @@
   [../]
   [./pry]
     type = ParsedFunction
-    value = 1.0e-3*(y-0.5)
+    value = 1.0e-5*(y-0.5)
   [../]
 []
 
@@ -354,7 +354,7 @@
     type = DiffusionMaterial
     diffusion_coefficient = 5.0e-4
     activity_coefficient = 1.0
-    gas_constant = 8.314e-3
+    gas_constant = 8.314e9
     temperature = 298
     use_displaced_mesh = false
   [../]
@@ -362,7 +362,7 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-3' #silicon in mol/(m^3)
+    prop_values = '1.0e-12' #silicon in mol/(m^3)
   [../]
 
 []
@@ -395,7 +395,7 @@
 
 [Executioner]
   type = Transient
-  solve_type = PJFNK
+  solve_type = NEWTON
   steady_state_detection = true
   steady_state_tolerance = 1e-06
   # line_search = l2

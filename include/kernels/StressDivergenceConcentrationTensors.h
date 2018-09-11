@@ -49,12 +49,12 @@ protected:
   virtual Real computeQpOffDiagJacobian(unsigned int jvar) override;
 
   virtual void computeFiniteDeformJacobian();
-  virtual void computeDeformedTest();
-  virtual void computeDeformedPhi();
+//  virtual void computeDeformedTest();
+//  virtual void computeDeformedPhi();
   
   virtual void computeAverageGradientTest();
   virtual void computeAverageGradientPhi();
-  virual void computeAverageVolumeChange();
+  virtual void computeAverageVolumeChange();
   
 
   std::string _base_name;

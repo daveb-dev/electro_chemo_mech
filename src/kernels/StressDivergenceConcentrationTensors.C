@@ -211,8 +211,8 @@ StressDivergenceConcentrationTensors::computeOffDiagJacobian(MooseVariableFEBase
   {
     if (_volumetric_locking_correction)
     {
-        computeDeformdTest();
-        computeDeformedPhi();
+//        computeDeformdTest();
+//        computeDeformedPhi();
       computeAverageGradientPhi();
       computeAverageGradientTest();
       computeAverageVolumeChange();

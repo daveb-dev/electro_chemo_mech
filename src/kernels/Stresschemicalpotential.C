@@ -80,7 +80,7 @@ Stresschemicalpotential::computeQpResidual()
 {
     Real J = _deformation_gradient[_qp].det();
     RankTwoTensor kirchoff_stress = _stress[_qp]*J;
-    return (_u[_qp] + (1.0/_density[_qp])*kirchoff_stress.doubleContraction((*_deigenstrain_dC)[_qp]))
+    return (_u[_qp]*_density[_qp] + kirchoff_stress.doubleContraction((*_deigenstrain_dC)[_qp]))
             *_test[_i][_qp];
     
 //    return 0.0;
@@ -89,7 +89,7 @@ Stresschemicalpotential::computeQpResidual()
 Real
 Stresschemicalpotential::computeQpJacobian()
 {
-    return _test[_i][_qp]*_phi[_j][_qp] ;
+    return _density[_qp]*_test[_i][_qp]*_phi[_j][_qp] ;
 }
 
 Real
@@ -97,29 +97,30 @@ Stresschemicalpotential::computeQpOffDiagJacobian(unsigned int jvar)
 {
     Real J = _deformation_gradient[_qp].det();
     const RankTwoTensor I(RankTwoTensor::initIdentity);   
-//    RankTwoTensor dstress_dc = _elasticity_tensor[_qp]*((*_deigenstrain_dC)[_qp]*I);
+    RankTwoTensor dstress_dc = -_elasticity_tensor[_qp]*((*_deigenstrain_dC)[_qp]*I);
     if (jvar == _conc_var)
     {
 //        return -dstress_dc.trace() * _phi[_j][_qp] * _test[_i][_qp]/_density[_qp]/3.0;
-        Real deltac = (_concentration[_qp] - _concentration_old[_qp]);
-        if (fabs(deltac) > 1.0e-15 )
-        {
-            Real resid = ((_stress[_qp] - _stress_old[_qp]).trace())/deltac
-                    *((*_deigenstrain_dC)[_qp]).trace()/_density[_qp];
+//        Real deltac = (_concentration[_qp] - _concentration_old[_qp]);
+//        if (fabs(deltac) > 1.0e-20 )
+//        {
+//            Real resid = ((_stress[_qp] - _stress_old[_qp]).trace())/deltac
+//                    *((*_deigenstrain_dC)[_qp]).trace(); // /_density[_qp];
+            Real resid = dstress_dc.trace()/3.0;
             resid *= _phi[_j][_qp] * _test[_i][_qp];
             return resid;
-        }
-        else {
-            return 0.0;
-        }
+//        }
+//        else {
+//            return 0.0;
+//        }
     } else
     {
         for (unsigned int coupled_component = 0; coupled_component < _ndisp; ++ coupled_component)
         {
             if (jvar == _disp_var[coupled_component])
             {
-                return ((1.0/_density[_qp]) * _elasticity_tensor[_qp] * ((*_deigenstrain_dC)[_qp]) 
-                * _grad_test[_j][_qp])(_component) *_phi[_i][_qp];
+                return (  _elasticity_tensor[_qp] * ((*_deigenstrain_dC)[_qp]) 
+                * _grad_phi[_j][_qp])(coupled_component) *_test[_i][_qp];
 
             }
         }
