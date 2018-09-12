@@ -7,10 +7,10 @@
 
 [Mesh]
   type = ConcentricCircleMesh
-  radii = "0.5 1.0 1.5"
-  rings = "2 5 15"
+  radii = "0.5 1.0 2.0"
+  rings = "2 5 10"
   inner_mesh_fraction = "0.25"
-  num_sectors = 30
+  num_sectors = 12
   has_outer_square = off
   preserve_volumes = off
 []
@@ -276,13 +276,13 @@
   [./bottom_y]
     type = PresetBC
     variable = disp_y
-    boundary = center
+    boundary = outer
     value = 0.0
   [../]
   [./side_x]
     type = PresetBC
     variable = disp_x
-    boundary = center
+    boundary = outer
     value = 0.0
   [../]
   [./li_current]
@@ -290,7 +290,7 @@
     variable = conc
     boundary = outer
     function = flux_t
-    use_displaced_mesh = false
+    # use_displaced_mesh = false
   [../]
 []
 
@@ -310,7 +310,7 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.2
+    partial_molar_volume = -0.1
     eigenstrain_name = eigenstrain
     use_displaced_mesh = false
   [../]
@@ -341,6 +341,11 @@
   [./ave_conc_inner]
     type = AverageNodalVariableValue
     variable = conc
+    boundary = outer
+  [../]
+  [./avg_pressure]
+    type = SideAverageValue
+    variable = output_pressure
     boundary = outer
   [../]
 []

@@ -6,25 +6,20 @@
 []
 
 [Mesh]
-  # dim = 2
-  # type = GeneratedMesh
-  # xmax = 1.0
-  # xmin = 0.0
-  # nx = 10
-  # ny = 10
   type = ConcentricCircleMesh
-  radii = "0.5 1.0 1.5"
-  rings = "2 5 15"
-  inner_mesh_fraction = "0.25"
-  num_sectors = 30
+  radii = "0.5 1.0 2.0"
+  rings = "2 5 10"
+  inner_mesh_fraction = 0.25
+  num_sectors = 12
   has_outer_square = off
   preserve_volumes = off
+  portion = upper_half
 []
 [MeshModifiers]
   [./center]
     type = BoundingBoxNodeSet
-    top_right = '0.01 0.01 0.0'
-    bottom_left = '-0.01 -0.01 0.0'
+    top_right = '0.001 0.001 0.0'
+    bottom_left = '-0.001 -0.001 0.0'
     new_boundary = 'center'
   [../]
 []
@@ -41,12 +36,13 @@
   # [../]
 
   [./conc]
-    # initial_condition = 1.0
+    initial_condition = 1.0
     scaling = 1e1
   [../]
   [./mu_m]
     # initial_condition = 10000.0
      scaling = 1e-3
+
   [../]
 []
 [Functions]
@@ -54,7 +50,12 @@
     type = ParsedFunction
     vars = 'flux period offset'
     vals = '0.0001 7200.0 0.0'
-    value = 'flux*(-1)^(floor(2.0*t/period))'
+    value = '-flux*(-1)^(floor(2.0*t/period))'
+  [../]
+  [./conc_t]
+    type = PiecewiseLinear
+    x = '0. 1.'
+    y = '0. 1.'
   [../]
 []
 
@@ -260,7 +261,7 @@
   [./diff]
     type = ChemoDiffusion
     variable = conc
-
+    stress_based_chemical_potential = mu_m
     use_displaced_mesh = false
     diffusion_coefficient = diffusion_coefficient
   [../]
@@ -303,29 +304,35 @@
   [./bottom_y]
     type = PresetBC
     variable = disp_y
-    boundary = center
+    boundary = outer
     value = 0.0
   [../]
   [./side_x]
     type = PresetBC
     variable = disp_x
-    boundary = center
+    boundary = outer
     value = 0.0
   [../]
+  # [./li_conc]
+  #   type = FunctionDirichletBC
+  #   variable = conc
+  #   boundary = all
+  #   function = conc_t
+  # [../]
   [./li_current]
     type = FunctionNeumannBC
     variable = conc
     boundary = outer
     function = flux_t
-    use_displaced_mesh = false
+    # use_displaced_mesh = false
   [../]
 []
 
 [Materials]
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 0.19
-    poissons_ratio = 0.24
+    youngs_modulus = 0.1
+    poissons_ratio = 0.26
   [../]
 
 
@@ -336,10 +343,10 @@
   [./conc_strain]
     type = ComputeConcentrationEigenstrain
     concentration = conc
-    stress_free_concentration = 0.0
-    partial_molar_volume = 0.7
+    stress_free_concentration = 1.0
+    partial_molar_volume = -0.1
     eigenstrain_name = eigenstrain
-    use_displaced_mesh = false
+    # use_displaced_mesh = true
   [../]
 
   [./stress]
@@ -351,25 +358,31 @@
     diffusion_coefficient = 5.0e-4
     activity_coefficient = 1.0
     gas_constant = 8.314e9
-    temperature = 298
+    temperature = 300
     use_displaced_mesh = false
   [../]
 
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-13' #silicon in mol/(m^3)
+    prop_values = 5e-14 #silicon in mol/(m^3)
   [../]
 
 []
 
 
+
 [Postprocessors]
-  # [./ave_conc_inner]
-  #   type = AverageNodalVariableValue
-  #   variable = conc
-  #   boundary = outer
-  # [../]
+  [./ave_conc_inner]
+    type = AverageNodalVariableValue
+    variable = conc
+    boundary = outer
+  [../]
+  [./avg_pressure]
+    type = SideAverageValue
+    variable = output_pressure
+    boundary = outer
+  [../]
 []
 
 [Preconditioning]
@@ -398,14 +411,14 @@
   solve_type = NEWTON
   # line_search = l2
   nl_rel_tol = 1e-2
-  # nl_abs_tol = 1e-6
+  nl_abs_tol = 1e-4
 
   l_tol = 1e-2
 
   l_max_its = 100
 
-  dt = 50
-  end_time = 7200.0
+  dt = 25
+  end_time = 7200
   compute_initial_residual_before_preset_bcs = true
 []
 [Debug]
@@ -416,4 +429,6 @@
   exodus = true
   print_linear_residuals = true
   csv = true
+  sync_times = '200 400 600 800 1000 1200 1400 1600 1800 2000 2200 2400 2600 2800 3000 3200 3400 3600 3800 4000 4200 4400 4600 4800 5000 5200 5400 5600 5800 6000 6200 6400 6600 6800 7000 7200'
+  interval = 8
 []

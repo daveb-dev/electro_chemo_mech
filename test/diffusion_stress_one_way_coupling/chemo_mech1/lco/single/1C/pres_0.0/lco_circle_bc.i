@@ -1,31 +1,13 @@
 #Run with 4 procs
 [GlobalParams]
   displacements = 'disp_x disp_y '
-  # temperature = conc
-  volumetric_locking_correction = true
 []
 
 [Mesh]
-  # type = GeneratedMesh
-  # dim = 2
-  # nx = 50
-  # ny = 50
-  #
-  # xmin = 0.0
-  # xmax = 6.0
-  # ymin = 0.0
-  # ymax = 2.0
+
   # dim = 2
   type = FileMesh
   file = 'single.msh'
-[]
-[MeshModifiers]
-  [./center]
-    type = BoundingBoxNodeSet
-    top_right = '0.05 0.05 0.0'
-    bottom_left = '-0.05 -0.05 0.0'
-    new_boundary = 'center'
-  [../]
 []
 
 [Variables]
@@ -44,14 +26,14 @@
     scaling = 1e-1
   [../]
   [./mu_m]
-    scaling = 1e-18
+    scaling = 1e-3
   [../]
 []
 [Functions]
   [./flux_t]
     type = ParsedFunction
     vars = 'flux period offset'
-    vals = '0.0001 7200.0 200.0'
+    vals = '0.0001 7200.0 0.0'
     value = '-flux*(-1)^(floor(2.0*t/period))'
   [../]
 []
@@ -216,7 +198,7 @@
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
@@ -228,8 +210,8 @@
     displacements = 'disp_x disp_y'
     component = 1
     use_displaced_mesh = true
-    volumetric_locking_correction = true
-    temperature = conc
+    volumetric_locking_correction = false
+    concentration =  conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
     block = 'inner'
@@ -240,7 +222,7 @@
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
     variable = disp_x
@@ -252,8 +234,8 @@
     displacements = 'disp_x disp_y'
     component = 1
     use_displaced_mesh = true
-    volumetric_locking_correction = true
-    temperature = conc
+    volumetric_locking_correction = false
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
     variable = disp_y
     block = 'outer'
@@ -263,6 +245,7 @@
   [./diff]
     type = ChemoDiffusion
     variable = conc
+    stress_based_chemical_potential = mu_m
     use_displaced_mesh = false
     diffusion_coefficient = diffusion_coefficient
   [../]
@@ -277,7 +260,7 @@
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     chemical_potential = mu_m
-    use_displaced_mesh = false
+    use_displaced_mesh = true
     displacements = 'disp_x disp_y'
     component = 0
     block = 'inner'
@@ -288,7 +271,7 @@
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     chemical_potential = mu_m
-    use_displaced_mesh = false
+    use_displaced_mesh = true
     displacements = 'disp_x disp_y'
     component = 1
     block = 'inner'
@@ -302,6 +285,7 @@
     displacements = 'disp_x disp_y'
     component = 0
     block = 'outer'
+    use_displaced_mesh = true
   [../]
 
   [./mu_y2]
@@ -313,6 +297,7 @@
     displacements = 'disp_x disp_y'
     component = 1
     block = 'outer'
+    use_displaced_mesh = true
   [../]
 
 []
@@ -320,7 +305,7 @@
 [BCs]
   [./CoupledPressure]
     [./tb]
-      boundary = 'top bot'
+      boundary = 'top'
       pressure = pressure
       displacements = 'disp_x disp_y'
     [../]
@@ -343,7 +328,7 @@
     variable = conc
     boundary = 'inner'
     function = flux_t
-    use_displaced_mesh = false
+    # use_displaced_mesh = false
   [../]
 []
 

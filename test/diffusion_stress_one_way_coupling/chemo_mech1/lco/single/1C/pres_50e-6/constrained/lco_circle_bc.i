@@ -54,7 +54,7 @@
     type = ParsedFunction
     vars = 'flux period offset'
     vals = '0.0001 7200.0 200.0'
-    value = '-flux*(-1)^(floor(2.0*t/period))'
+    value = '-flux*(-1)^(floor(2.0*(t-offset)/period))'
   [../]
 []
 

@@ -3,21 +3,9 @@
 # Pressure applied on top
 [GlobalParams]
   displacements = 'disp_x disp_y '
-  # temperature = conc
-  volumetric_locking_correction = true
 []
 
 [Mesh]
-  # type = GeneratedMesh
-  # dim = 2
-  # nx = 50
-  # ny = 50
-  #
-  # xmin = 0.0
-  # xmax = 6.0
-  # ymin = 0.0
-  # ymax = 2.0
-  # dim = 2
   type = FileMesh
   file = 'single.msh'
 []
@@ -43,7 +31,7 @@
 
   [./conc]
     initial_condition = 1.0
-    scaling = 1e-2
+    scaling = 1e1
   [../]
   [./mu_m]
     scaling = 1e-3
@@ -53,7 +41,7 @@
   [./flux_t]
     type = ParsedFunction
     vars = 'flux period offset'
-    vals = '0.0001 7200.0 200.0'
+    vals = '0.0001 7200.0 0.0'
     value = '-flux*(-1)^(floor(2.0*t/period))'
   [../]
 []
@@ -253,7 +241,7 @@
     component = 1
     use_displaced_mesh = true
     volumetric_locking_correction = false
-    temperature = conc
+    concentration =  conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
     block = 'inner'
@@ -277,7 +265,7 @@
     component = 1
     use_displaced_mesh = true
     volumetric_locking_correction = false
-    temperature = conc
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
     variable = disp_y
     block = 'outer'
@@ -404,9 +392,9 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.4
+    partial_molar_volume = -0.1
     eigenstrain_name = eigenstrain
-    use_displaced_mesh = true
+    # use_displaced_mesh = true
     block = 'inner'
   [../]
 
@@ -416,7 +404,7 @@
     stress_free_concentration = 1.0
     partial_molar_volume = 0.0
     eigenstrain_name = eigenstrain_electrolyte
-    use_displaced_mesh = true
+    # use_displaced_mesh = true
     block = 'outer'
   [../]
 
@@ -428,8 +416,8 @@
     type = DiffusionMaterial
     diffusion_coefficient = 5.0e-4
     activity_coefficient = 1.0
-    gas_constant = 8.314e-3
-    temperature = 298
+    gas_constant = 8.314e9
+    temperature = 300
     use_displaced_mesh = false
     block = 'inner'
   [../]
@@ -437,8 +425,8 @@
     type = DiffusionMaterial
     diffusion_coefficient = 1.0
     activity_coefficient = 1.0
-    gas_constant = 8.314e-3
-    temperature = 298
+    gas_constant = 8.314e9
+    temperature = 300
     use_displaced_mesh = false
     block = 'outer'
   [../]
@@ -446,14 +434,14 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0' #silicon in mol/(m^3)
+    prop_values = '5.0e-14' #silicon in mol/(m^3)
     block = 'inner'
   [../]
 
   [./density_electrolyte]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0' #silicon in mol/(m^3)
+    prop_values = '5.0e-14' #silicon in mol/(m^3)
     block = 'outer'
   [../]
 
@@ -505,14 +493,14 @@
   type = Transient
   solve_type = NEWTON
 
-  nl_rel_tol = 1e-3
-  nl_abs_tol = 1e-6
+  nl_rel_tol = 1e-2
+  nl_abs_tol = 1e-4
 
   l_tol = 1e-2
 
   l_max_its = 100
 
-  dt = 200
+  dt = 10
   end_time = 7200.0
 []
 [Debug]
@@ -523,4 +511,6 @@
   exodus = true
   print_linear_residuals = true
   csv = true
+  sync_times = '200 400 600 800 1000 1200 1400 1600 1800 2000 2200 2400 2600 2800 3000 3200 3400 3600 3800 4000 4200 4400 4600 4800 5000 5200 5400 5600 5800 6000 6200 6400 6600 6800 7000 7200'
+  interval = 10
 []

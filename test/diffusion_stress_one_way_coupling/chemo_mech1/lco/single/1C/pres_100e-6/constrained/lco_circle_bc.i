@@ -20,10 +20,10 @@
 
 [Variables]
   [./disp_x]
-    # scaling = 1.0e-5
+    # scaling = 1.0e8
   [../]
   [./disp_y]
-    # scaling = 1.0e-5
+    # scaling = 1.0e8
   [../]
   # [./disp_z]
   #   # scaling = 1.0e8
@@ -31,18 +31,18 @@
 
   [./conc]
     initial_condition = 1.0
-    scaling = 1e-1
+    scaling = 1e1
   [../]
   [./mu_m]
-    scaling = 1e2
+    scaling = 1e-3
   [../]
 []
 [Functions]
   [./flux_t]
     type = ParsedFunction
     vars = 'flux period offset'
-    vals = '0.0001 7200.0 0.0'
-    value = '-flux*(-1)^(floor(2.0*t/period))'
+    vals = '0.0001 7200.0 200.0'
+    value = '-flux*(-1)^(floor(2.0*(t-offset)/period))'
   [../]
 []
 
@@ -115,7 +115,7 @@
   [./pressure]
     type = ConstantAux
     variable = pressure
-    value = 0.0
+    value = 100e-6 # 100 MPa in um units
   [../]
 
   [./flux_x]
@@ -228,7 +228,7 @@
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
@@ -240,8 +240,8 @@
     displacements = 'disp_x disp_y'
     component = 1
     use_displaced_mesh = true
-    volumetric_locking_correction = true
-    temperature = conc
+    volumetric_locking_correction = false
+    concentration =  conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
     block = 'inner'
@@ -252,7 +252,7 @@
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
-    volumetric_locking_correction = true
+    volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
     variable = disp_x
@@ -264,8 +264,8 @@
     displacements = 'disp_x disp_y'
     component = 1
     use_displaced_mesh = true
-    volumetric_locking_correction = true
-    temperature = conc
+    volumetric_locking_correction = false
+    concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
     variable = disp_y
     block = 'outer'
@@ -275,6 +275,7 @@
   [./diff]
     type = ChemoDiffusion
     variable = conc
+    stress_based_chemical_potential = mu_m
     use_displaced_mesh = false
     diffusion_coefficient = diffusion_coefficient
   [../]
@@ -391,9 +392,9 @@
     type = ComputeConcentrationEigenstrain
     concentration = conc
     stress_free_concentration = 1.0
-    partial_molar_volume = -0.07
+    partial_molar_volume = -0.1
     eigenstrain_name = eigenstrain
-    use_displaced_mesh = false
+    # use_displaced_mesh = true
     block = 'inner'
   [../]
 
@@ -403,7 +404,7 @@
     stress_free_concentration = 1.0
     partial_molar_volume = 0.0
     eigenstrain_name = eigenstrain_electrolyte
-    use_displaced_mesh = false
+    # use_displaced_mesh = true
     block = 'outer'
   [../]
 
@@ -415,8 +416,8 @@
     type = DiffusionMaterial
     diffusion_coefficient = 5.0e-4
     activity_coefficient = 1.0
-    gas_constant = 8.314e-3
-    temperature = 298
+    gas_constant = 8.314e9
+    temperature = 300
     use_displaced_mesh = false
     block = 'inner'
   [../]
@@ -424,8 +425,8 @@
     type = DiffusionMaterial
     diffusion_coefficient = 1.0
     activity_coefficient = 1.0
-    gas_constant = 8.314e-3
-    temperature = 298
+    gas_constant = 8.314e9
+    temperature = 300
     use_displaced_mesh = false
     block = 'outer'
   [../]
@@ -433,19 +434,26 @@
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0e-8' #silicon in mol/(m^3)
+    prop_values = '5.0e-14' #silicon in mol/(m^3)
     block = 'inner'
   [../]
 
   [./density_electrolyte]
     type = GenericConstantMaterial
     prop_names = 'density'
-    prop_values = '1.0' #silicon in mol/(m^3)
+    prop_values = '5.0e-14' #silicon in mol/(m^3)
     block = 'outer'
   [../]
 
 []
-
+[Preconditioning]
+  [./SMP]
+    type = SMP
+    full = true
+    petsc_options_iname = '-pc_type'
+    petsc_options_value = 'lu'
+  [../]
+[]
 
 [Postprocessors]
   [./ave_conc_inner]
@@ -480,37 +488,20 @@
   [../]
 []
 
-[Preconditioning]
-  active = pref
-  [./pref]
-    type = SMP
-    full = true
-    petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-    petsc_options_value = 'lu mumps'
-  [../]
-  [./basic]
-    type = SMP
-    full = true
-    petsc_options = '-ksp_diagonal_scale -ksp_diagonal_scale_fix'
-    petsc_options_iname = '-pc_type -sub_pc_type -sub_pc_factor_shift_type -pc_asm_overlap'
-    petsc_options_value = ' asm      lu           NONZERO                   2'
-  [../]
-[]
 
 [Executioner]
   type = Transient
-  solve_type = 'PJFNK'
-  # line_search = l2
+  solve_type = NEWTON
+
   nl_rel_tol = 1e-2
-  nl_abs_tol = 1e-6
+  nl_abs_tol = 1e-4
 
   l_tol = 1e-2
 
   l_max_its = 100
 
-  dt = 200
-  end_time = 7200.0
-  compute_initial_residual_before_preset_bcs = true
+  dt = 10
+  end_time = 7400.0
 []
 [Debug]
   # show_material_props = true
@@ -520,4 +511,6 @@
   exodus = true
   print_linear_residuals = true
   csv = true
+  # sync_times = '200 400 600 800 1000 1200 1400 1600 1800 2000 2200 2400 2600 2800 3000 3200 3400 3600 3800 4000 4200 4400 4600 4800 5000 5200 5400 5600 5800 6000 6200 6400 6600 6800 7000 7200'
+  # interval = 10
 []

@@ -80,7 +80,7 @@ Stresschemicalpotential::computeQpResidual()
 {
     Real J = _deformation_gradient[_qp].det();
     RankTwoTensor kirchoff_stress = _stress[_qp]*J;
-    return (_u[_qp]*_density[_qp] + kirchoff_stress.doubleContraction((*_deigenstrain_dC)[_qp]))
+    return (_u[_qp]*_density[_qp] + kirchoff_stress.trace()*(*_deigenstrain_dC)[_qp].trace()/3.0)
             *_test[_i][_qp];
     
 //    return 0.0;
