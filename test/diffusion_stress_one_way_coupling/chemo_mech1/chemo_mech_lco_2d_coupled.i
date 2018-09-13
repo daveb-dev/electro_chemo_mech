@@ -122,7 +122,7 @@
 
 [Kernels]
   [./stress_x]
-    type = StressDivergenceTensors
+    type = StressDivergenceConcentrationTensors
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
@@ -133,7 +133,7 @@
   [../]
 
   [./stress_y]
-    type = StressDivergenceTensors
+    type = StressDivergenceConcentrationTensors
     displacements = 'disp_x disp_y'
     component = 1
     use_displaced_mesh = true

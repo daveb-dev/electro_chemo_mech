@@ -6,13 +6,15 @@
 []
 
 [Mesh]
-  type = ConcentricCircleMesh
-  radii = "0.5 1.0 2.0"
-  rings = "2 5 10"
-  inner_mesh_fraction = 0.25
-  num_sectors = 12
-  has_outer_square = off
-  preserve_volumes = off
+  # type = ConcentricCircleMesh
+  # radii = "0.5 1.0 2.0"
+  # rings = "2 5 10"
+  # inner_mesh_fraction = 0.25
+  # num_sectors = 12
+  # has_outer_square = off
+  # preserve_volumes = off
+  type = FileMesh
+  file = test2.msh
 []
 [MeshModifiers]
   [./center]
@@ -236,7 +238,7 @@
 
 [Kernels]
   [./stress_x]
-    type = StressDivergenceTensors
+    type = StressDivergenceConcentrationTensors
     displacements = 'disp_x disp_y'
     component = 0
     use_displaced_mesh = true
@@ -247,7 +249,7 @@
   [../]
 
   [./stress_y]
-    type = StressDivergenceTensors
+    type = StressDivergenceConcentrationTensors
     displacements = 'disp_x disp_y'
     component = 1
     use_displaced_mesh = true
