@@ -7,7 +7,7 @@
 
 [Mesh]
   type = FileMesh
-  file = 'single.msh'
+  file = 'test2.msh'
 []
 # [MeshModifiers]
 #   [./center]
@@ -41,8 +41,8 @@
   [./flux_t]
     type = ParsedFunction
     vars = 'flux period offset'
-    vals = '0.0001 7200.0 200.0'
-    value = '-flux*(-1)^(floor(2.0*(t-offset)/period))'
+    vals = '0.00025 7200.0 0.0'
+    value = '-flux*(-1)^(floor(2.0*t/period))'
   [../]
 []
 
@@ -115,7 +115,7 @@
   [./pressure]
     type = ConstantAux
     variable = pressure
-    value = 100e-6 # 100 MPa in um units
+    value = 100.0e-6
   [../]
 
   [./flux_x]
@@ -500,8 +500,8 @@
 
   l_max_its = 100
 
-  dt = 10
-  end_time = 7400.0
+  dt = 50
+  end_time = 7200.0
 []
 [Debug]
   # show_material_props = true
@@ -511,6 +511,6 @@
   exodus = true
   print_linear_residuals = true
   csv = true
-  # sync_times = '200 400 600 800 1000 1200 1400 1600 1800 2000 2200 2400 2600 2800 3000 3200 3400 3600 3800 4000 4200 4400 4600 4800 5000 5200 5400 5600 5800 6000 6200 6400 6600 6800 7000 7200'
-  # interval = 10
+  sync_times = '200 400 600 800 1000 1200 1400 1600 1800 2000 2200 2400 2600 2800 3000 3200 3400 3600 3800 4000 4200 4400 4600 4800 5000 5200 5400 5600 5800 6000 6200 6400 6600 6800 7000 7200'
+  interval = 10
 []
