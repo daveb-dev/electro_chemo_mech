@@ -2,12 +2,12 @@
 # Fully constrained system. Constrained in bottom_x, constrained in y on both sides
 # Pressure applied on top
 [GlobalParams]
-  displacements = 'disp_x disp_y '
+  displacements = 'disp_x disp_y disp_z'
 []
 
 [Mesh]
   type = FileMesh
-  file = 'test2.msh'
+  file = 'Mesh_1.unv'
 []
 # [MeshModifiers]
 #   [./center]
@@ -25,9 +25,9 @@
   [./disp_y]
     # scaling = 1.0e8
   [../]
-  # [./disp_z]
-  #   # scaling = 1.0e8
-  # [../]
+  [./disp_z]
+    # scaling = 1.0e8
+  [../]
 
   [./conc]
     initial_condition = 1.0
@@ -41,7 +41,7 @@
   [./flux_t]
     type = ParsedFunction
     vars = 'flux period offset'
-    vals = '0.00025 7200.0 0.0'
+    vals = '0.0001 7200.0 0.0'
     value = '-flux*(-1)^(floor(2.0*t/period))'
   [../]
 []
@@ -65,6 +65,11 @@
   [../]
 
   [./flux_y]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+
+  [./flux_z]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -130,6 +135,14 @@
     type = DiffusionFluxAux
     variable = flux_y
     component = y
+    diffusivity = mobility
+    diffusion_variable = conc
+  [../]
+
+  [./flux_z]
+    type = DiffusionFluxAux
+    variable = flux_z
+    component = z
     diffusivity = mobility
     diffusion_variable = conc
   [../]
@@ -224,53 +237,75 @@
 
 [Kernels]
   [./stress_x]
-    type = StressDivergenceConcentrationTensors
-    displacements = 'disp_x disp_y'
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
     component = 0
     use_displaced_mesh = true
     volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_x
-    block = 'inner'
+    block = 1
   [../]
 
   [./stress_y]
-    type = StressDivergenceConcentrationTensors
-    displacements = 'disp_x disp_y'
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
     component = 1
     use_displaced_mesh = true
     volumetric_locking_correction = false
     concentration =  conc
     concentration_eigenstrain_name = eigenstrain
     variable = disp_y
-    block = 'inner'
+    block = 1
+  [../]
+
+  [./stress_z]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    use_displaced_mesh = true
+    volumetric_locking_correction = false
+    concentration =  conc
+    concentration_eigenstrain_name = eigenstrain
+    variable = disp_z
+    block = 1
   [../]
 
   [./stress_x2]
-    type = StressDivergenceConcentrationTensors
-    displacements = 'disp_x disp_y'
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
     component = 0
     use_displaced_mesh = true
     volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
     variable = disp_x
-    block = 'outer'
+    block = 2
   [../]
 
   [./stress_y2]
-    type = StressDivergenceConcentrationTensors
-    displacements = 'disp_x disp_y'
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
     component = 1
     use_displaced_mesh = true
     volumetric_locking_correction = false
     concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
     variable = disp_y
-    block = 'outer'
+    block = 2
   [../]
-
+  [./stress_z2]
+    type = StressDivergenceTensors
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    use_displaced_mesh = true
+    volumetric_locking_correction = false
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain_electrolyte
+    variable = disp_z
+    block = 2
+  [../]
 
   [./diff]
     type = ChemoDiffusion
@@ -291,9 +326,9 @@
     concentration_eigenstrain_name = eigenstrain
     chemical_potential = mu_m
     use_displaced_mesh = true
-    displacements = 'disp_x disp_y'
+    displacements = 'disp_x disp_y disp_z'
     component = 0
-    block = 'inner'
+    block = 1
   [../]
   [./mu_y]
     type = Stresschemicalpotential
@@ -302,19 +337,32 @@
     concentration_eigenstrain_name = eigenstrain
     chemical_potential = mu_m
     use_displaced_mesh = true
-    displacements = 'disp_x disp_y'
+    displacements = 'disp_x disp_y disp_z'
     component = 1
-    block = 'inner'
+    block = 1
   [../]
+  [./mu_z]
+    type = Stresschemicalpotential
+    variable = mu_m
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain
+    chemical_potential = mu_m
+    use_displaced_mesh = true
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    block = 1
+  [../]
+
+
   [./mu_x2]
     type = Stresschemicalpotential
     variable = mu_m
     chemical_potential = mu_m
     concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
-    displacements = 'disp_x disp_y'
+    displacements = 'disp_x disp_y disp_z'
     component = 0
-    block = 'outer'
+    block = 2
     use_displaced_mesh = true
   [../]
 
@@ -324,39 +372,50 @@
     chemical_potential = mu_m
     concentration = conc
     concentration_eigenstrain_name = eigenstrain_electrolyte
-    displacements = 'disp_x disp_y'
+    displacements = 'disp_x disp_y disp_z'
     component = 1
-    block = 'outer'
+    block = 2
+    use_displaced_mesh = true
+  [../]
+
+  [./mu_z2]
+    type = Stresschemicalpotential
+    variable = mu_m
+    chemical_potential = mu_m
+    concentration = conc
+    concentration_eigenstrain_name = eigenstrain_electrolyte
+    displacements = 'disp_x disp_y disp_z'
+    component = 2
+    block = 2
     use_displaced_mesh = true
   [../]
 
 []
 
 [BCs]
-  [./CoupledPressure]
-    [./tb]
-      boundary = 'top'
-      pressure = pressure
-      displacements = 'disp_x disp_y'
-    [../]
-  [../]
 
   [./bottom_y]
     type = PresetBC
     variable = disp_y
-    boundary = 'bot'
+    boundary = 9
     value = 0.0
   [../]
   [./side_x]
     type = PresetBC
     variable = disp_x
-    boundary = 'left right'
+    boundary = 3
+    value = 0.0
+  [../]
+  [./side_z]
+    type = PresetBC
+    variable = disp_z
+    boundary = 3
     value = 0.0
   [../]
   [./li_current]
     type = FunctionNeumannBC
     variable = conc
-    boundary = 'inner'
+    boundary = 5
     function = flux_t
     use_displaced_mesh = false
   [../]
@@ -367,25 +426,25 @@
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 0.19
     poissons_ratio = 0.24
-    block = 'inner'
+    block = 1
   [../]
 
   [./elasticity_tensor_electrolyte]
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 0.015
     poissons_ratio = 0.24
-    block = 'outer'
+    block = 2
   [../]
 
   [./strain]
     type = ComputeFiniteStrain
     eigenstrain_names = eigenstrain
-    block = 'inner'
+    block = 1
   [../]
   [./strain_electrolyte]
     type = ComputeFiniteStrain
     eigenstrain_names = eigenstrain_electrolyte
-    block = 'outer'
+    block = 2
   [../]
 
   [./conc_strain]
@@ -395,7 +454,7 @@
     partial_molar_volume = -0.1
     eigenstrain_name = eigenstrain
     # use_displaced_mesh = true
-    block = 'inner'
+    block = 1
   [../]
 
   [./conc_strain_electrolyte]
@@ -405,7 +464,7 @@
     partial_molar_volume = 0.0
     eigenstrain_name = eigenstrain_electrolyte
     # use_displaced_mesh = true
-    block = 'outer'
+    block = 2
   [../]
 
   [./stress]
@@ -419,7 +478,7 @@
     gas_constant = 8.314e9
     temperature = 300
     use_displaced_mesh = false
-    block = 'inner'
+    block = 1
   [../]
   [./heat_electrolyte]
     type = DiffusionMaterial
@@ -428,21 +487,21 @@
     gas_constant = 8.314e9
     temperature = 300
     use_displaced_mesh = false
-    block = 'outer'
+    block = 2
   [../]
 
   [./density]
     type = GenericConstantMaterial
     prop_names = 'density'
     prop_values = '5.0e-14' #silicon in mol/(m^3)
-    block = 'inner'
+    block = 1
   [../]
 
   [./density_electrolyte]
     type = GenericConstantMaterial
     prop_names = 'density'
     prop_values = '5.0e-14' #silicon in mol/(m^3)
-    block = 'outer'
+    block = 2
   [../]
 
 []
@@ -459,33 +518,33 @@
   [./ave_conc_inner]
     type = AverageNodalVariableValue
     variable = conc
-    boundary = 'inner'
+    boundary = 5
   [../]
-  [./ave_stress_11_right]
-    type = SideAverageValue
-    variable = stress_11
-    boundary = 'right'
-  [../]
+  # [./ave_stress_11_right]
+  #   type = SideAverageValue
+  #   variable = stress_11
+  #   boundary = 4
+  # [../]
   [./ave_interface_stress_rr]
     type = SideAverageValue
     variable = stress_rr
-    boundary = 'inner'
+    boundary = 5
   [../]
   [./ave_interface_stress_tt]
     type = SideAverageValue
     variable = stress_tt
-    boundary = 'inner'
+    boundary = 5
   [../]
   [./ave_interface_stress_rt]
     type = SideAverageValue
     variable = stress_rt
-    boundary = 'inner'
+    boundary = 5
   [../]
-  [./axial_stress]
-    type = SideAverageValue
-    variable = axial_direction
-    boundary = 'bot'
-  [../]
+  # [./axial_stress]
+  #   type = SideAverageValue
+  #   variable = axial_direction
+  #   boundary = 4
+  # [../]
 []
 
 
@@ -500,7 +559,7 @@
 
   l_max_its = 100
 
-  dt = 50
+  dt = 20
   end_time = 7200.0
 []
 [Debug]
@@ -511,6 +570,6 @@
   exodus = true
   print_linear_residuals = true
   csv = true
-  sync_times = '200 400 600 800 1000 1200 1400 1600 1800 2000 2200 2400 2600 2800 3000 3200 3400 3600 3800 4000 4200 4400 4600 4800 5000 5200 5400 5600 5800 6000 6200 6400 6600 6800 7000 7200'
-  interval = 10
+  # sync_times = '200 400 600 800 1000 1200 1400 1600 1800 2000 2200 2400 2600 2800 3000 3200 3400 3600 3800 4000 4200 4400 4600 4800 5000 5200 5400 5600 5800 6000 6200 6400 6600 6800 7000 7200'
+  # interval = 10
 []
