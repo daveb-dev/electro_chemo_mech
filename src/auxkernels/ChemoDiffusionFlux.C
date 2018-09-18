@@ -12,6 +12,7 @@
  */
 
 #include "ChemoDiffusionFlux.h"
+#include "MooseVariable.h"
 
 registerMooseObject("electro_chemo_mechApp", ChemoDiffusionFluxAux);
 
@@ -35,6 +36,7 @@ validParams<ChemoDiffusionFluxAux>()
 ChemoDiffusionFluxAux::ChemoDiffusionFluxAux(const InputParameters & parameters)
   : AuxKernel(parameters),
     _component(getParam<MooseEnum>("component")),
+    _u(coupledValue("diffusion_variable")),
     _grad_u(coupledGradient("diffusion_variable")),
     _grad_mu(coupledGradient("chemical_potential")),
     _diffusion_coef(getMaterialProperty<Real>("diffusivity")),
@@ -45,5 +47,5 @@ ChemoDiffusionFluxAux::ChemoDiffusionFluxAux(const InputParameters & parameters)
 Real
 ChemoDiffusionFluxAux::computeValue()
 {
-  return -(_diffusion_coef[_qp] * _grad_u[_qp](_component) + _mobility[_qp]*_grad_mu[_qp](_component));
+  return -(_diffusion_coef[_qp] * _grad_u[_qp](_component) + _mobility[_qp]*_u[_qp]*_grad_mu[_qp](_component));
 }

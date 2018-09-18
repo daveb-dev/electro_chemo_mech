@@ -36,6 +36,10 @@ protected:
   /// Will hold 0, 1, or 2 corresponding to x, y, or z.
   int _component;
 
+  
+  /// Holds the gradient of the concentration at the current quadrature points
+  const VariableValue & _u;
+
   /// Holds the gradient of the concentration at the current quadrature points
   const VariableGradient & _grad_u;
 
