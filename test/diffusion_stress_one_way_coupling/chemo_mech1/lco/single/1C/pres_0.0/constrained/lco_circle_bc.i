@@ -7,7 +7,7 @@
 
 [Mesh]
   type = FileMesh
-  file = 'test2.msh'
+  file = 'single.msh'
 []
 # [MeshModifiers]
 #   [./center]
@@ -119,19 +119,21 @@
   [../]
 
   [./flux_x]
-    type = DiffusionFluxAux
+    type = ChemoDiffusionFluxAux
     variable = flux_x
     component = x
     diffusivity = mobility
     diffusion_variable = conc
+    chemical_potential = mu_m
   [../]
 
   [./flux_y]
-    type = DiffusionFluxAux
+    type = ChemoDiffusionFluxAux
     variable = flux_y
     component = y
     diffusivity = mobility
     diffusion_variable = conc
+    chemical_potential = mu_m
   [../]
 
   [./stress_11]
@@ -500,7 +502,7 @@
 
   l_max_its = 100
 
-  dt = 50
+  dt = 10
   end_time = 7200.0
 []
 [Debug]
