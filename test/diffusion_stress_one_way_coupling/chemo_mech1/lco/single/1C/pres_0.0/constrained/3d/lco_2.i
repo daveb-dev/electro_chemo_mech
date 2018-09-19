@@ -7,7 +7,7 @@
 
 [Mesh]
   type = FileMesh
-  file = 'Mesh_1.unv'
+  file = 'Mesh_2.unv'
 []
 # [MeshModifiers]
 #   [./center]
@@ -41,7 +41,7 @@
   [./flux_t]
     type = ParsedFunction
     vars = 'flux period offset'
-    vals = '0.0001 7200.0 0.0'
+    vals = '0.00025 7200.0 0.0'
     value = '-flux*(-1)^(floor(2.0*t/period))'
   [../]
 []
@@ -394,28 +394,28 @@
 
 [BCs]
 
-  [./bottom_y]
+  [./side_y]
     type = PresetBC
     variable = disp_y
-    boundary = 9
+    boundary = 5
     value = 0.0
   [../]
   [./side_x]
     type = PresetBC
     variable = disp_x
-    boundary = 3
+    boundary = '3 8'
     value = 0.0
   [../]
   [./side_z]
     type = PresetBC
     variable = disp_z
-    boundary = 3
+    boundary = '4 7'
     value = 0.0
   [../]
   [./li_current]
     type = FunctionNeumannBC
     variable = conc
-    boundary = 5
+    boundary = 9
     function = flux_t
     use_displaced_mesh = false
   [../]
@@ -518,7 +518,7 @@
   [./ave_conc_inner]
     type = AverageNodalVariableValue
     variable = conc
-    boundary = 5
+    boundary = 9
   [../]
   # [./ave_stress_11_right]
   #   type = SideAverageValue
@@ -528,17 +528,17 @@
   [./ave_interface_stress_rr]
     type = SideAverageValue
     variable = stress_rr
-    boundary = 5
+    boundary = 9
   [../]
   [./ave_interface_stress_tt]
     type = SideAverageValue
     variable = stress_tt
-    boundary = 5
+    boundary = 9
   [../]
   [./ave_interface_stress_rt]
     type = SideAverageValue
     variable = stress_rt
-    boundary = 5
+    boundary = 9
   [../]
   # [./axial_stress]
   #   type = SideAverageValue
@@ -559,7 +559,7 @@
 
   l_max_its = 100
 
-  dt = 20
+  dt = 10
   end_time = 7200.0
 []
 [Debug]
@@ -570,6 +570,6 @@
   exodus = true
   print_linear_residuals = true
   csv = true
-  # sync_times = '200 400 600 800 1000 1200 1400 1600 1800 2000 2200 2400 2600 2800 3000 3200 3400 3600 3800 4000 4200 4400 4600 4800 5000 5200 5400 5600 5800 6000 6200 6400 6600 6800 7000 7200'
-  # interval = 10
+  sync_times = '200 400 600 800 1000 1200 1400 1600 1800 2000 2200 2400 2600 2800 3000 3200 3400 3600 3800 4000 4200 4400 4600 4800 5000 5200 5400 5600 5800 6000 6200 6400 6600 6800 7000 7200'
+  interval = 10
 []

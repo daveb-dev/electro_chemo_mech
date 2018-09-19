@@ -5,8 +5,8 @@
   outer  <=>  2 
   xface  <=>  3 
   zface  <=>  4 
-  inner  <=>  5 
-  outer_z  <=>  6 
-  outer_y  <=>  7 
-  outer_x  <=>  8 
-  yface  <=>  9 
+  yface  <=>  5 
+  yface_outer  <=>  6 
+  zface_outer  <=>  7 
+  xface_outer  <=>  8 
+  inner_face  <=>  9 
