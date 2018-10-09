@@ -31,7 +31,7 @@ protected:
     virtual void computeConcentrationStrain(Real & concentration_strain, Real & partial_molar_volume) override;
 
     Function & _volume_expansion_function;
-    Function & _partial_molar_volume_function;
+//    Function & _partial_molar_volume_function;
 private:
 
 };
