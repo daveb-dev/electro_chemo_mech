@@ -13,7 +13,7 @@
 
 #include "HEVAnandHardening.h"
 
-registerMooseObject("TensorMechanicsApp", HEVPAnandHardening);
+registerMooseObject("electro_chemo_mechApp", HEVAnandHardening);
 
 template <>
 InputParameters
@@ -41,11 +41,11 @@ HEVAnandHardening::HEVAnandHardening(const InputParameters & parameters)
 bool
 HEVAnandHardening::computeValue(unsigned int qp, Real dt, Real & val) const
 {
-    if (_t == 0) {
-        val = _H0;
+    if (_t <= dt) {
+        val = _S0 ;
     } else {
-//        Real Ht = _H0*(1.0 - _this_old[_qp]/_Ssat)
-        val = _this_old[_qp] + dt * _intvar[qp];
+        Real Ht = _H0*std::pow(1.0 - _this_old[qp]/_Ssat, _alpha);
+        val = _this_old[qp] + dt * Ht * _intvar[qp];
     }
   return true;
 }
@@ -58,7 +58,7 @@ HEVAnandHardening::computeDerivative(unsigned int qp,
   val = 0;
 
   if (_intvar_prop_name == coupled_var_name) {
-      val = _H0*std::pow(1.0 - _this_old[_qp]/_Ssat, _alpha);
+      val = _H0*std::pow(1.0 - _this_old[qp]/_Ssat, _alpha);
   }
 
   return true;

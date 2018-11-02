@@ -14,12 +14,12 @@
 #ifndef HEVANANDHARDENING_H
 #define HEVANANDHARDENING_H
 
-#include "HEVStrengthUOBase.h"
+#include "HEVPStrengthUOBase.h"
 
 class HEVAnandHardening;
 
 template <>
-InputParameters validParams<HEVPAnandHardening>();
+InputParameters validParams<HEVAnandHardening>();
 
 /**
  * This user object classs
@@ -28,7 +28,7 @@ InputParameters validParams<HEVPAnandHardening>();
  */
 
 
-class HEVAnandHardening : public HEVStrengthUOBase {
+class HEVAnandHardening : public HEVPStrengthUOBase {
 public:
   HEVAnandHardening(const InputParameters & parameters);
 
