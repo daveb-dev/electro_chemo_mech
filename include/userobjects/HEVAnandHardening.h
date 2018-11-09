@@ -33,7 +33,7 @@ public:
   HEVAnandHardening(const InputParameters & parameters);
 
   virtual bool computeValue(unsigned int, Real, Real &) const;
-  virtual bool computeDerivative(unsigned int, const std::string &, Real &) const;
+  virtual bool computeDerivative(unsigned int, Real, const std::string &, Real &) const;
 
 protected:
     Real _H0;

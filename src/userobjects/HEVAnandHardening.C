@@ -41,24 +41,32 @@ HEVAnandHardening::HEVAnandHardening(const InputParameters & parameters)
 bool
 HEVAnandHardening::computeValue(unsigned int qp, Real dt, Real & val) const
 {
-    if (_t <= dt) {
-        val = _S0 ;
-    } else {
-        Real Ht = _H0*std::pow(1.0 - _this_old[qp]/_Ssat, _alpha);
-        val = _this_old[qp] + dt * Ht * _intvar[qp];
+    Real Ht, St;
+    if (_t_step == 1) {
+        St = _S0;
+    } else { 
+        St = _this_old[qp];        
     }
+    Ht = _H0*std::pow(1.0 - St/_Ssat, _alpha);
+    val = St  + dt*Ht*_intvar[qp];
   return true;
 }
 
 bool
 HEVAnandHardening::computeDerivative(unsigned int qp,
+                                              Real dt,
                                               const std::string & coupled_var_name,
                                               Real & val) const
 {
   val = 0;
-
+  
   if (_intvar_prop_name == coupled_var_name) {
-      val = _H0*std::pow(1.0 - _this_old[qp]/_Ssat, _alpha);
+      if (_t_step == 1){
+          val = _H0*std::pow(1.0 - _S0/_Ssat, _alpha);
+      } else {
+          val = _H0*std::pow(1.0 - _this_old[qp]/_Ssat, _alpha);
+      }
+      
   }
 
   return true;
