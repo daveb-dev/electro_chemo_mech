@@ -36,6 +36,9 @@ HEVAnandHardening::HEVAnandHardening(const InputParameters & parameters)
     _alpha(getParam<Real>("hardening_exponent")),
     _S0(getParam<Real>("initial_yield_stress"))
 {
+//    _H0 /= 3.0;
+//    _S0 /= std::sqrt(3.0);
+//    _Ssat /= std::sqrt(3.0);
 }
 
 bool
@@ -47,7 +50,7 @@ HEVAnandHardening::computeValue(unsigned int qp, Real dt, Real & val) const
     } else { 
         St = _this_old[qp];        
     }
-    Ht = _H0*std::pow(1.0 - St/_Ssat, _alpha);
+    Ht = _H0 * std::pow(1.0 - St / _Ssat, _alpha);
     val = St  + dt*Ht*_intvar[qp];
   return true;
 }
