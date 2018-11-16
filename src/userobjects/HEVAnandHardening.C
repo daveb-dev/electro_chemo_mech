@@ -20,10 +20,14 @@ InputParameters
 validParams<HEVAnandHardening>()
 {
   InputParameters params = validParams<HEVPStrengthUOBase>();
-  params.addParam<Real>("hardening_modulus", "Hardening Modulus");
+  params.addRequiredParam<Real>("hardening_modulus", "Hardening Modulus");
   params.addRequiredParam<Real>("saturation_hardening", "Saturation value of hardening");
   params.addRequiredParam<Real>("hardening_exponent", "The hardening exponent value");
   params.addRequiredParam<Real>("initial_yield_stress", "Initial value of yield stress");
+  params.addRequiredParam<std::string>("intvar_rate_prop_name",
+                               "Name of internal variable property to "
+                               "calculate material resistance: Same as "
+                               "internal variable user object");
   params.addClassDescription("User object for Ramberg-Osgood hardening power law hardening");
 
   return params;
@@ -34,8 +38,11 @@ HEVAnandHardening::HEVAnandHardening(const InputParameters & parameters)
     _H0(getParam<Real>("hardening_modulus")),
     _Ssat(getParam<Real>("saturation_hardening")),
     _alpha(getParam<Real>("hardening_exponent")),
-    _S0(getParam<Real>("initial_yield_stress"))
-{
+    _S0(getParam<Real>("initial_yield_stress")),
+    _intvar_rate_prop_name(getParam<std::string>("intvar_rate_prop_name")),
+    _intvar_rate(getMaterialPropertyByName<Real>(_intvar_rate_prop_name))
+        
+{   
 //    _H0 /= 3.0;
 //    _S0 /= std::sqrt(3.0);
 //    _Ssat /= std::sqrt(3.0);
@@ -44,14 +51,17 @@ HEVAnandHardening::HEVAnandHardening(const InputParameters & parameters)
 bool
 HEVAnandHardening::computeValue(unsigned int qp, Real dt, Real & val) const
 {
-    Real Ht, St;
+    Real Ht, St, nup_t;
     if (_t_step == 1) {
         St = _S0;
+//        nup_t = 1.0;
+        nup_t = 0.5;
     } else { 
         St = _this_old[qp];        
+        nup_t = _intvar_rate[qp];
     }
     Ht = _H0 * std::pow(1.0 - St / _Ssat, _alpha);
-    val = St  + dt*Ht*_intvar[qp];
+    val = St  + dt*Ht*nup_t;
   return true;
 }
 
@@ -69,7 +79,7 @@ HEVAnandHardening::computeDerivative(unsigned int qp,
       } else {
           val = _H0*std::pow(1.0 - _this_old[qp]/_Ssat, _alpha);
       }
-      
+//      val *= std::sqrt(3.0);
   }
 
   return true;

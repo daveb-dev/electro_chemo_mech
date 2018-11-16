@@ -40,6 +40,8 @@ protected:
     Real _Ssat;
     Real _alpha;
     Real _S0;
+    std::string _intvar_rate_prop_name;
+    const MaterialProperty<Real> & _intvar_rate;
 private:
 
 };
