@@ -38,7 +38,7 @@ RICHARDS            := no
 SOLID_MECHANICS     := no
 STOCHASTIC_TOOLS    := no
 TENSOR_MECHANICS    := yes
-XFEM                := yes
+XFEM                := no
 POROUS_FLOW         := no
 
 include $(MOOSE_DIR)/modules/modules.mk

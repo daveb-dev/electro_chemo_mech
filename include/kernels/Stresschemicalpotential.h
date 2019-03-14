@@ -20,8 +20,8 @@
 #include "RankFourTensor.h"
 
 class Stresschemicalpotential;
-class RankTwoTensor;
-class RankFourTensor;
+//class RankTwoTensor;
+//class RankFourTensor;
 
 template<> 
 InputParameters validParams<Stresschemicalpotential>();

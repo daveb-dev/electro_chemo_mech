@@ -6,7 +6,7 @@
 
 /* 
  * File:   HEVAnandHardening.C
- * Author: srinath
+ * Author: Srinath Chakravarthy
  * 
  * Created on November 1, 2018, 12:55 PM
  */
@@ -40,26 +40,37 @@ HEVAnandHardening::HEVAnandHardening(const InputParameters & parameters)
     _alpha(getParam<Real>("hardening_exponent")),
     _S0(getParam<Real>("initial_yield_stress")),
     _intvar_rate_prop_name(getParam<std::string>("intvar_rate_prop_name")),
-    _intvar_rate(getMaterialPropertyByName<Real>(_intvar_rate_prop_name))
+    _intvar_rate(getMaterialPropertyByName<Real>(_intvar_rate_prop_name)),        
+    _this_old(getMaterialPropertyOldByName<Real>(_name))
         
 {   
-//    _H0 /= 3.0;
-//    _S0 /= std::sqrt(3.0);
-//    _Ssat /= std::sqrt(3.0);
+
 }
 
+Real 
+HEVAnandHardening::initVal() const
+{
+    return _S0;
+}
 bool
 HEVAnandHardening::computeValue(unsigned int qp, Real dt, Real & val) const
 {
     Real Ht, St, nup_t;
-    if (_t_step == 1) {
-        St = _S0;
-//        nup_t = 1.0;
-        nup_t = 0.5;
-    } else { 
-        St = _this_old[qp];        
-        nup_t = _intvar_rate[qp];
-    }
+//    if (_t_step < 1) {
+//        St = _S0;
+//        nup_t = 0.5;
+//    } else { 
+////        if (_this_old[qp] < _S0)
+////        {
+////            St = _S0;
+////        } else
+////        {
+//            St = _this_old[qp];
+////        }
+//        nup_t = _intvar_rate[qp];
+//    }
+    nup_t = _intvar_rate[qp];
+    St = _this_old[qp];
     Ht = _H0 * std::pow(1.0 - St / _Ssat, _alpha);
     val = St  + dt*Ht*nup_t;
   return true;

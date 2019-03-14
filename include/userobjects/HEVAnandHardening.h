@@ -34,7 +34,8 @@ public:
 
   virtual bool computeValue(unsigned int, Real, Real &) const;
   virtual bool computeDerivative(unsigned int, Real, const std::string &, Real &) const;
-
+  Real initVal() const;
+  
 protected:
     Real _H0;
     Real _Ssat;
@@ -42,6 +43,7 @@ protected:
     Real _S0;
     std::string _intvar_rate_prop_name;
     const MaterialProperty<Real> & _intvar_rate;
+    const MaterialProperty<Real> & _this_old;
 private:
 
 };

@@ -20,8 +20,8 @@
 
 // Forward Declarations
 class StressDivergenceConcentrationTensors;
-class RankTwoTensor;
-class RankFourTensor;
+//class RankTwoTensor;
+//class RankFourTensor;
 
 template <>
 InputParameters validParams<StressDivergenceConcentrationTensors>();

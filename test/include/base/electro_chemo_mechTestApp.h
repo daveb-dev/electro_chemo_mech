@@ -23,9 +23,7 @@ public:
   virtual ~electro_chemo_mechTestApp();
 
   static void registerApps();
-  static void registerObjects(Factory & factory);
-  static void associateSyntax(Syntax & syntax, ActionFactory & action_factory);
-  static void registerExecFlags(Factory & factory);
+  static void registerAll(Factory & f, ActionFactory & af, Syntax & s, bool use_test_objs = false);
 };
 
 #endif /* ELECTRO_CHEMO_MECHTESTAPP_H */
