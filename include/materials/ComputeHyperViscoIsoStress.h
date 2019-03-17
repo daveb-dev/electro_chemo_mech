@@ -72,16 +72,16 @@ protected:
 
   /**
    */
-  virtual void updateQpStateSingleModel(unsigned model_number,
-                                        RankTwoTensor & elastic_strain_increment,
-                                        RankTwoTensor & combined_inelastic_strain_increment);
+//  virtual void updateQpStateSingleModel(unsigned model_number,
+//                                        RankTwoTensor & elastic_strain_increment,
+//                                        RankTwoTensor & combined_inelastic_strain_increment);
 
   /**
    * Using _elasticity_tensor[_qp] and the consistent tangent operators,
    * _consistent_tangent_operator[...] computed by the inelastic models,
    * compute _Jacobian_mult[_qp]
    */
-  virtual void computeQpJacobianMult();
+//  virtual void computeQpJacobianMult();
 
   /**
    * Given a trial stress (_stress[_qp]) and a strain increment (elastic_strain_increment)
@@ -97,10 +97,10 @@ protected:
    * corresponding to the supplied strain increment
    * @param consistent_tangent_operator The consistent tangent operator
    */
-  virtual void computeAdmissibleState(unsigned model_number,
-                                      RankTwoTensor & elastic_strain_increment,
-                                      RankTwoTensor & inelastic_strain_increment,
-                                      RankFourTensor & consistent_tangent_operator);
+//  virtual void computeAdmissibleState(unsigned model_number,
+//                                      RankTwoTensor & elastic_strain_increment,
+//                                      RankTwoTensor & inelastic_strain_increment,
+//                                      RankFourTensor & consistent_tangent_operator);
 
   ///@{Input parameters associated with the recompute iteration to return the stress state to the yield surface
   const unsigned int _max_iterations;
@@ -126,23 +126,14 @@ protected:
   /// what sort of Tangent operator to calculate
   const enum class TangentOperatorEnum { elastic, nonlinear } _tangent_operator_type;
 
-  /// number of plastic models
-  const unsigned _num_models;
 
-  /// Flags to compute tangent during updateState call
-  std::vector<bool> _tangent_computation_flag;
 
   /// Calculation method for the tangent modulus
   TangentCalculationMethod _tangent_calculation_method;
 
-  /// _inelastic_strain = sum_i (_inelastic_weights_i * inelastic_strain_from_model_i)
-  const std::vector<Real> _inelastic_weights;
 
   /// the consistent tangent operators computed by each plastic model
-  std::vector<RankFourTensor> _consistent_tangent_operator;
-
-  /// whether to cycle through the models, using only one model per timestep
-  const bool _cycle_models;
+  RankFourTensor _consistent_tangent_operator;
 
   MaterialProperty<Real> & _matl_timestep_limit;
 
@@ -151,17 +142,12 @@ protected:
    */
   const RankFourTensor _identity_symmetric_four;
 
-  /**
-   * The user supplied list of inelastic models to use in the simulation
-   *
-   * Users should take care to list creep models first and plasticity
-   * models last to allow for the case when a creep model relaxes the stress state
-   * inside of the yield surface in an iteration.
-   */
-  std::vector<StressUpdateBase *> _models;
 
   /// is the elasticity tensor guaranteed to be isotropic?
   bool _is_elasticity_tensor_guaranteed_isotropic;
+  
+  const MaterialProperty<RankTwoTensor> & _deformation_gradient;
+  const MaterialProperty<RankTwoTensor> & _deformation_gradient_old;
 };
 
 #endif /* COMPUTEHYPERVISCOISOSTRESS_H */
