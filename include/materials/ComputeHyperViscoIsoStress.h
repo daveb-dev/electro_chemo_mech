@@ -70,6 +70,10 @@ protected:
   virtual void finiteStrainRotation(const bool force_elasticity_rotation = false);
 
 
+  virtual void updateQpState(RankTwoTensor & elastic_strain_increment,
+                             RankTwoTensor & combined_inelastic_strain_increment);
+
+  
   /**
    */
 //  virtual void updateQpStateSingleModel(unsigned model_number,
@@ -97,10 +101,9 @@ protected:
    * corresponding to the supplied strain increment
    * @param consistent_tangent_operator The consistent tangent operator
    */
-//  virtual void computeAdmissibleState(unsigned model_number,
-//                                      RankTwoTensor & elastic_strain_increment,
-//                                      RankTwoTensor & inelastic_strain_increment,
-//                                      RankFourTensor & consistent_tangent_operator);
+  virtual void computeAdmissibleState( RankTwoTensor & elastic_strain_increment,
+                                      RankTwoTensor & inelastic_strain_increment,
+                                      RankFourTensor & consistent_tangent_operator);
 
   ///@{Input parameters associated with the recompute iteration to return the stress state to the yield surface
   const unsigned int _max_iterations;
@@ -146,8 +149,16 @@ protected:
   /// is the elasticity tensor guaranteed to be isotropic?
   bool _is_elasticity_tensor_guaranteed_isotropic;
   
+  StressUpdateBase * _model;
+  
   const MaterialProperty<RankTwoTensor> & _deformation_gradient;
   const MaterialProperty<RankTwoTensor> & _deformation_gradient_old;
+  
+  MaterialProperty<RankTwoTensor>  & _Fp;
+  
+  /// old value of Plastic Distortion
+  const MaterialProperty<RankTwoTensor> & _Fp_old;
+
 };
 
 #endif /* COMPUTEHYPERVISCOISOSTRESS_H */
