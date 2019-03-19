@@ -106,6 +106,9 @@ protected:
   MaterialProperty<Real> & _hardening_variable;
   const MaterialProperty<Real> & _hardening_variable_old;
 
+  MaterialProperty<Real> & _strength_variable;
+  const MaterialProperty<Real> & _strength_variable_old;
+
   const MaterialProperty<RankTwoTensor> & _deformation_gradient;
   const MaterialProperty<RankTwoTensor> & _deformation_gradient_old;
   
