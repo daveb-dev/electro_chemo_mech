@@ -94,6 +94,12 @@ protected:
   Real _H0; // Hardening modulus
   Real _Ysat; // Saturation value
   Real _ahard; // Hardening exponent
+  
+  // Equivalent shear properties 
+  Real _shear_rate;
+  Real _shear_initial_resistance;
+  Real _shear_saturation;
+  Real _shear_initial_hardness;
 
   /// plastic strain in this model
   MaterialProperty<RankTwoTensor> & _plastic_strain;
@@ -102,6 +108,7 @@ protected:
   const MaterialProperty<RankTwoTensor> & _plastic_strain_old;
 
   
+  MaterialProperty<Real> & _yield_strength;
   
   MaterialProperty<Real> & _hardening_variable;
   const MaterialProperty<Real> & _hardening_variable_old;

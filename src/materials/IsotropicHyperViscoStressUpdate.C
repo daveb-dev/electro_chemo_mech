@@ -31,12 +31,12 @@ validParams<IsotropicHyperViscoStressUpdate>()
                              "constitutive models, yet it can be used in conjunction with other "
                              "creep and plasticity materials for more complex simulations.");
   
-  params.addParam<Real>("rate_exponent", 50.0, "Rate Sensitivity parameter");
-  params.addParam<Real>("reference_strain_rate",0.001, "Reference strain rate");
-  params.addParam<Real>("initial_resistance", 0.0, "Initial resistance in tension");
-  params.addParam<Real>("hardening_modulus", 1.0, "Hardening modulus in tension");
-  params.addParam<Real>("saturation_resistance", 1.0, "Saturation value of hardening in tension");
-  params.addParam<Real>("hardening_exponent", 1.0, "Hardening exponent");
+  params.addRequiredParam<Real>("rate_exponent", "Rate Sensitivity parameter");
+  params.addRequiredParam<Real>("reference_strain_rate", "Reference strain rate");
+  params.addRequiredParam<Real>("initial_resistance", "Initial resistance in tension");
+  params.addRequiredParam<Real>("hardening_modulus", "Hardening modulus in tension");
+  params.addRequiredParam<Real>("saturation_resistance", "Saturation value of hardening in tension");
+  params.addRequiredParam<Real>("hardening_exponent", "Hardening exponent");
   params.addDeprecatedParam<std::string>(
       "plastic_prepend",
       "",
@@ -60,6 +60,7 @@ IsotropicHyperViscoStressUpdate::IsotropicHyperViscoStressUpdate(const InputPara
         declareProperty<RankTwoTensor>(_base_name + _plastic_prepend + "plastic_strain")),
     _plastic_strain_old(
         getMaterialPropertyOld<RankTwoTensor>(_base_name + _plastic_prepend + "plastic_strain")),
+    _yield_strength(declareProperty<Real>(_base_name + "yield_strength")),
     _hardening_variable(declareProperty<Real>(_base_name + "hardening_variable")),
     _hardening_variable_old(getMaterialPropertyOld<Real>(_base_name + "hardening_variable")), 
     _strength_variable(declareProperty<Real>(_base_name + "strength_variable")),
@@ -70,13 +71,18 @@ IsotropicHyperViscoStressUpdate::IsotropicHyperViscoStressUpdate(const InputPara
     _Fp_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + _plastic_prepend + "plastic_distortion"))
 
 {
+    _shear_rate = _epsilon_rate * std::sqrt(3.0);
+    _shear_initial_resistance = _Y0 / std::sqrt(3.0);
+    _shear_saturation = _Ysat / std::sqrt(3.0);
+    _shear_initial_hardness = _H0 / 3.0;
 }
 
 void
 IsotropicHyperViscoStressUpdate::initQpStatefulProperties()
 {
-  _hardening_variable[_qp] = 0.0;
-  _strength_variable[_qp] = 0.0;
+  _hardening_variable[_qp] = _shear_initial_hardness;
+  _strength_variable[_qp] = _shear_initial_resistance;
+  _yield_strength[_qp] = _Y0;
   _plastic_strain[_qp].zero();
   _Fp[_qp].zero();
   _Fp[_qp].addIa(1.0);
@@ -97,7 +103,8 @@ IsotropicHyperViscoStressUpdate::computeStressInitialize(const Real effective_tr
                                                          const RankFourTensor & elasticity_tensor)
 {
   computeYieldStress(elasticity_tensor);
-  _hardening_variable[_qp] = _H0 * std::pow((1.0 - _strength_variable_old[_qp]/_Ysat), _ahard);
+  _hardening_variable[_qp] = _shear_initial_hardness 
+                            * std::pow((1.0 - (_strength_variable_old[_qp] / _shear_saturation)), _ahard);
 
 }
 
@@ -110,7 +117,7 @@ IsotropicHyperViscoStressUpdate::computeResidual(const Real effective_trial_stre
   _strength_variable[_qp] = computeHardeningValue(scalar);
   
   residual = effective_trial_stress - _dt * scalar *_three_shear_modulus / 3.0 
-            - _strength_variable[_qp] * (std::pow((scalar/_epsilon_rate), _mrate));
+            - _strength_variable[_qp] * (std::pow((scalar/_shear_rate), _mrate));
           
   return residual;
 }
@@ -123,9 +130,9 @@ IsotropicHyperViscoStressUpdate::computeDerivative(const Real effective_trial_st
   if (scalar > 0.0)
   {
     Real hslope = computeHardeningDerivative(scalar);
-    Real fac1 = hslope * std::pow((scalar/_epsilon_rate), _mrate);
-    Real fac2 = _strength_variable[_qp] * (_mrate/_epsilon_rate) * 
-               std::pow((scalar / _epsilon_rate), _mrate-1);
+    Real fac1 = hslope * std::pow((scalar/_shear_rate), _mrate);
+    Real fac2 = _strength_variable[_qp] * (_mrate/_shear_rate) * 
+               std::pow((scalar / _shear_rate), _mrate-1.0);
     derivative = -_three_shear_modulus/3.0 * _dt - fac1 - fac2;
   } else
   {
@@ -137,12 +144,15 @@ IsotropicHyperViscoStressUpdate::computeDerivative(const Real effective_trial_st
 void
 IsotropicHyperViscoStressUpdate::iterationFinalize(Real scalar)
 {
+    _strength_variable[_qp] = _strength_variable_old[_qp] + _dt * _hardening_variable[_qp] * scalar;
 }
 
 void
 IsotropicHyperViscoStressUpdate::computeStressFinalize(const RankTwoTensor & plasticStrainIncrement)
 {
   _plastic_strain[_qp] += plasticStrainIncrement;
+  _yield_strength[_qp] = _strength_variable[_qp]*std::sqrt(3.0);
+  
 }
 
 Real
@@ -151,7 +161,7 @@ IsotropicHyperViscoStressUpdate::computeHardeningValue(Real scalar)
   Real value = 0.0;
   
   value = _strength_variable_old[_qp] + _dt * _hardening_variable[_qp] * scalar;
-  _strength_variable[_qp] = value;
+//  _strength_variable[_qp] = value;
   return value;
 }
 
@@ -180,7 +190,7 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
 {
     RankTwoTensor Fp_inv (_Fp_old[_qp].inverse());
     RankTwoTensor Fe_tr = _deformation_gradient[_qp]*Fp_inv;
-    Real J = _deformation_gradient[_qp].det();
+    
     RankTwoTensor Ce_tr = Fe_tr.transpose() * Fe_tr; 
     std::vector<Real> e_value(3);
     RankTwoTensor e_vector, N1, N2, N3;
@@ -205,7 +215,7 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
     // compute the effective trial stress
   Real dev_trial_stress_squared =
       deviatoric_trial_stress.doubleContraction(deviatoric_trial_stress);
-  Real effective_trial_stress = std::sqrt(3.0 / 2.0 * dev_trial_stress_squared);
+  Real effective_trial_stress = std::sqrt(1.0 / 2.0 * dev_trial_stress_squared);
 
   // Set the value of 3 * shear modulus for use as a reference residual value
   _three_shear_modulus = 3.0 * ElasticityTensorTools::getIsotropicShearModulus(elasticity_tensor);
@@ -219,8 +229,8 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
     returnMappingSolve(effective_trial_stress, scalar_effective_inelastic_strain, _console);
     if (scalar_effective_inelastic_strain != 0.0)
       inelastic_strain_increment =
-          deviatoric_trial_stress *
-          (1.5 * scalar_effective_inelastic_strain / effective_trial_stress);
+          (0.5) * deviatoric_trial_stress *
+          (scalar_effective_inelastic_strain / effective_trial_stress);
     else
       inelastic_strain_increment.zero();
   }
@@ -228,9 +238,11 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
     inelastic_strain_increment.zero();
 
   strain_increment -= inelastic_strain_increment;
-  _effective_inelastic_strain[_qp] =
-      _effective_inelastic_strain_old[_qp] + scalar_effective_inelastic_strain;
+  _effective_inelastic_strain[_qp] = 
+      _effective_inelastic_strain_old[_qp] + _dt * scalar_effective_inelastic_strain;
 
+//  _effective_inelastic_strain[_qp] = scalar_effective_inelastic_strain;
+  
 //  // Compute new Cauchy stress
   
   RankTwoTensor dpt = inelastic_strain_increment * _dt;
@@ -264,7 +276,7 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
   RankTwoTensor Me_tau = Me_tr - (2.0/3.0)*_three_shear_modulus 
                          * _dt * inelastic_strain_increment;
   
-  stress_new = R_tr * (Me_tau * R_tr.transpose()) / J;
+  stress_new = R_tr * (Me_tau * R_tr.transpose()) / _deformation_gradient[_qp].det();
   
   computeStressFinalize(inelastic_strain_increment);
 
