@@ -86,6 +86,7 @@ IsotropicHyperViscoStressUpdate::initQpStatefulProperties()
   _plastic_strain[_qp].zero();
   _Fp[_qp].zero();
   _Fp[_qp].addIa(1.0);
+  RadialReturnStressUpdate::initQpStatefulProperties();
 }
 
 void
@@ -96,6 +97,13 @@ IsotropicHyperViscoStressUpdate::propagateQpStatefulProperties()
   _plastic_strain[_qp] = _plastic_strain_old[_qp];
   _Fp[_qp] = _Fp_old[_qp];
   propagateQpStatefulPropertiesRadialReturn();
+}
+
+
+Real
+IsotropicHyperViscoStressUpdate::minimumPermissibleValue(const Real effective_trial_stress) const
+{
+    return 0.0;
 }
 
 void
@@ -113,12 +121,19 @@ IsotropicHyperViscoStressUpdate::computeResidual(const Real effective_trial_stre
                                                  const Real scalar)
 {
   Real residual = 0.0;
- 
+
   _strength_variable[_qp] = computeHardeningValue(scalar);
+   residual = effective_trial_stress - _dt * scalar *_three_shear_modulus / 3.0 
+           - _strength_variable[_qp] * (std::pow((scalar/_shear_rate), _mrate));
   
-  residual = effective_trial_stress - _dt * scalar *_three_shear_modulus / 3.0 
-            - _strength_variable[_qp] * (std::pow((scalar/_shear_rate), _mrate));
-          
+//  if (scalar > 0.0)
+//  {
+//    residual = effective_trial_stress - _dt * scalar *_three_shear_modulus / 3.0 
+//           - _strength_variable[_qp] * (std::pow((scalar/_shear_rate), _mrate));
+//  } else
+//  {
+//      residual =  effective_trial_stress - _dt * scalar *_three_shear_modulus / 3.0; 
+//  }
   return residual;
 }
 
@@ -126,18 +141,24 @@ Real
 IsotropicHyperViscoStressUpdate::computeDerivative(const Real effective_trial_stress,
                                                    const Real scalar)
 {
-  Real derivative = 1.0;
-  if (scalar > 0.0)
+  Real derivative;
+  Real fac1 = 0.0;
+  Real fac2 = 0.0;
+         
+  
+  if (scalar <= 0.0)
   {
-    Real hslope = computeHardeningDerivative(scalar);
-    Real fac1 = hslope * std::pow((scalar/_shear_rate), _mrate);
-    Real fac2 = _strength_variable[_qp] * (_mrate/_shear_rate) * 
-               std::pow((scalar / _shear_rate), _mrate-1.0);
-    derivative = -_three_shear_modulus/3.0 * _dt - fac1 - fac2;
+        fac1 = 0.0;
+        fac2 = 0.0;
+        
   } else
   {
-      derivative = -_three_shear_modulus/3.0 * _dt;
+        Real hslope = computeHardeningDerivative(scalar);
+        fac1 = hslope * std::pow((scalar/_shear_rate), _mrate);
+        fac2 = _strength_variable[_qp] * (_mrate/_shear_rate) * 
+                   std::pow((scalar / _shear_rate), _mrate-1.0);
   }
+  derivative = -_three_shear_modulus / 3.0 * _dt - fac1 - fac2;
   return derivative;
 }
 
@@ -310,8 +331,38 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
                               std::sqrt(1.5) / norm_dev_stress;
 
       tangent_operator = scalar_one * _deviatoric_projection_four +
-                         (_three_shear_modulus * deriv - scalar_one) * flow_direction_dyad;
+                         (_three_shear_modulus / 3.0 * deriv - scalar_one) * flow_direction_dyad;
     }
   } 
   
+}
+
+Real
+IsotropicHyperViscoStressUpdate::computeReferenceResidual(const Real effective_trial_stress,
+                                                   const Real scalar_effective_inelastic_strain)
+{
+  return effective_trial_stress / _three_shear_modulus /3.0 - scalar_effective_inelastic_strain;
+}
+
+
+Real
+IsotropicHyperViscoStressUpdate::computeStressDerivative(const Real effective_trial_stress, 
+                                                    const Real scalar)
+{
+    Real fac2; 
+    Real ret = 0.0;
+    if (effective_trial_stress > 0.0 && scalar > 0)
+    {
+        fac2 = 2.0/3.0*_three_shear_modulus/3.0*_dt;
+        
+        
+        Real hslope = computeHardeningDerivative(scalar);
+        Real qq = std::pow((scalar/_shear_rate), _mrate);
+        
+        Real den1 = hslope * qq;
+        Real den2 = _strength_variable[_qp] * _mrate / scalar * qq;
+        ret = fac2/(den1 + den2);
+
+    }
+    return ret;
 }

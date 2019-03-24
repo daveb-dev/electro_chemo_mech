@@ -73,16 +73,29 @@ protected:
   virtual void initQpStatefulProperties() override;
   virtual void propagateQpStatefulProperties() override;
 
+  virtual Real minimumPermissibleValue(const Real effective_trial_stress) const;
+  
+  virtual Real initialGuess(const Real /*effective_trial_stress*/) { return 1.0; }
+
+  
   virtual void computeStressInitialize(const Real effective_trial_stress,
                                        const RankFourTensor & elasticity_tensor) override;
+  
+  virtual Real computeStressDerivative(const Real effective_trial_stress, const Real scalar);
+
   virtual Real computeResidual(const Real effective_trial_stress, const Real scalar) override;
   virtual Real computeDerivative(const Real effective_trial_stress, const Real scalar) override;
   virtual void iterationFinalize(Real scalar) override;
   virtual void computeStressFinalize(const RankTwoTensor & plasticStrainIncrement) override;
 
+  
   virtual void computeYieldStress(const RankFourTensor & elasticity_tensor);
   virtual Real computeHardeningValue(Real scalar);
   virtual Real computeHardeningDerivative(Real scalar);
+  
+    virtual Real computeReferenceResidual(const Real effective_trial_stress,
+                                        const Real scalar_effective_inelastic_strain) override;
+
   
  
   /// a string to prepend to the plastic strain Material Property name
