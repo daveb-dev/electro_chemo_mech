@@ -23,9 +23,8 @@ InputParameters validParams<IsotropicHyperViscoStressUpdate>();
 
 /**
  * This class uses the Discrete material in a radial return isotropic plasticity
- * model.  This class is one of the basic radial return constitutive models;
- * more complex constitutive models combine creep and plasticity.
- *
+ * model.  
+ * 
  * This class inherits from RadialReturnStressUpdate and must be used
  * in conjunction with ComputeReturnMappingStress.  This class calculates
  * an effective trial stress, an effective scalar plastic strain
@@ -34,9 +33,12 @@ InputParameters validParams<IsotropicHyperViscoStressUpdate>();
  * the radial return stress increment.  This isotropic plasticity class also
  * computes the plastic strain as a stateful material property.
  *
- * This class is based on the implicit integration algorithm in F. Dunne and N.
+ * This class uses the implicit integration algorithm in F. Dunne and N.
  * Petrinic's Introduction to Computational Plasticity (2004) Oxford University
  * Press, pg. 146 - 149.
+ * This class is based on a total formulation, so the stress increment and 
+ * plastic strain increment are bases on 
+ * Weber and Anand (1990) Computer Methods in App mech and engr, pg. 173 - 183
  */
 
 class IsotropicHyperViscoStressUpdate : public RadialReturnStressUpdate
@@ -73,7 +75,6 @@ protected:
   virtual void initQpStatefulProperties() override;
   virtual void propagateQpStatefulProperties() override;
 
-  virtual Real minimumPermissibleValue(const Real effective_trial_stress) const;
   
   virtual Real initialGuess(const Real /*effective_trial_stress*/) { return 1.0; }
 
@@ -81,21 +82,20 @@ protected:
   virtual void computeStressInitialize(const Real effective_trial_stress,
                                        const RankFourTensor & elasticity_tensor) override;
   
-//  virtual Real computeStressDerivative(const Real effective_trial_stress, const Real scalar);
+  virtual Real computeStressDerivative(const Real effective_trial_stress, const Real scalar);
 
   virtual Real computeResidual(const Real effective_trial_stress, const Real scalar) override;
   virtual Real computeDerivative(const Real effective_trial_stress, const Real scalar) override;
   virtual void iterationFinalize(Real scalar) override;
   virtual void computeStressFinalize(const RankTwoTensor & plasticStrainIncrement) override;
 
+  virtual Real computeReferenceResidual(const Real effective_trial_stress, 
+                        const Real scalar_effective_inelastic_strain) override;
   
   virtual void computeYieldStress(const RankFourTensor & elasticity_tensor);
   virtual Real computeHardeningValue(Real scalar);
   virtual Real computeHardeningDerivative(Real scalar);
   
-    virtual Real computeReferenceResidual(const Real effective_trial_stress,
-                                        const Real scalar_effective_inelastic_strain) override;
-
   
  
   /// a string to prepend to the plastic strain Material Property name

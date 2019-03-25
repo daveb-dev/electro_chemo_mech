@@ -5,7 +5,7 @@
   zmax = 1.0e-3
   nx = 1
   ny = 1
-  nz = 1
+  nz = 2
   dim = 3
   elem_type = HEX8
 []
@@ -97,10 +97,10 @@
     value = 0
   [../]
   [./tdisp]
-    type = PresetVelocity
+    type = PresetBC
     variable = uz
     boundary = front
-    function = vel2
+    value = 1.0e-5
   [../]
 []
 
