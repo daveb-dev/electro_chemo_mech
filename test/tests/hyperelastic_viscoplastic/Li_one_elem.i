@@ -3,6 +3,9 @@
   xmax = 1.0e-3
   ymax = 1.0e-3
   zmax = 1.0e-3
+  nx = 1
+  ny = 1
+  nz = 2
   dim = 3
   elem_type = HEX8
 []
