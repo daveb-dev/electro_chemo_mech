@@ -2,7 +2,7 @@
   type = GeneratedMesh
   xmax = 1.0e-3
   ymax = 1.0e-3
-  zmax = 1.0e-3
+  zmax = 2.0e-3
   nx = 1
   ny = 1
   nz = 2
@@ -97,10 +97,10 @@
     value = 0
   [../]
   [./tdisp]
-    type = PresetBC
+    type = PresetVelocity
     variable = uz
     boundary = front
-    value = 1.0e-5
+    function = vel2
   [../]
 []
 
@@ -130,8 +130,8 @@
     reference_strain_rate = 0.05
     effective_inelastic_strain_name = effective_plastic_strain
     max_inelastic_increment = 1.0
-    internal_solve_full_iteration_history = true
-    internal_solve_output_on = always
+    # internal_solve_full_iteration_history = true
+    # internal_solve_output_on = always
   [../]
 []
 
@@ -174,11 +174,11 @@
   type = Transient
 
   #Preconditioned JFNK (default)
-  dt = 0.005
+  dt = 0.01
   solve_type = 'PJFNK'
-  petsc_options_iname = -pc_type
-  petsc_options_value = lu
-  dtmax = 0.05
+  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
+  petsc_options_value = 'lu mumps'
+  dtmax = 0.1
   nl_rel_tol = 1e-8
   nl_abs_tol = 1e-6
   dtmin = 1.0e-8
@@ -187,7 +187,7 @@
     dt = 5.0e-3
     growth_factor = 1.5
     cutback_factor = 0.25
-    optimal_iterations = 5
+    optimal_iterations = 10
   [../]
   # num_steps = 10
   end_time = 0.04

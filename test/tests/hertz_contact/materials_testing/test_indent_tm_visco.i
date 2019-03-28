@@ -118,60 +118,29 @@
     type = ComputeFiniteStrainElasticStress
     block = 'indenter'
   [../]
-
-  [./viscop]
-    type = FiniteStrainHyperElasticViscoPlastic
-    resid_abs_tol = 1e-6
-    resid_rel_tol = 1e-8
-    maxiters = 100
-    max_substep_iteration = 15
-    flow_rate_user_objects = 'flowrate'
-    strength_user_objects = 'flowstress'
-    internal_var_user_objects = 'ep_eqv'
-    internal_var_rate_user_objects = 'ep_eqv_rate'
+  [./stress2]
+    type = ComputeMultipleInelasticStress
+    inelastic_models = 'plas'
+    tangent_operator = nonlinear
+    perform_finite_strain_rotations = true
     block = 'substrate'
   [../]
-[] # Materials
+  [./plas]
+    type = IsotropicHyperViscoStressUpdate
+    absolute_tolerance = 1e-8
+    relative_tolerance = 1e-08
+    hardening_exponent = 1.8
+    saturation_resistance = 8.0e-3
+    initial_resistance = 2.0e-3
+    hardening_modulus = 40.0e-3
+    rate_exponent = 0.18
+    reference_strain_rate = 0.05
+    effective_inelastic_strain_name = effective_plastic_strain
+    max_inelastic_increment = 0.02
+    # internal_solve_full_iteration_history = true
+    # internal_solve_output_on = always
+  [../]
 
-[UserObjects]
-  [./flowstress]
-    type = HEVPRambergOsgoodHardening
-    yield_stress = 2.8e-3 # $00 MPa
-    hardening_exponent = 0.15
-    reference_plastic_strain = 0.0004
-    intvar_prop_name = ep_eqv
-    block = substrate
-  [../]
-  # Modified model for strain-rate dependent hardening
-  # From Narayan and Anand (EML 2018)
-  # Implemented as a custom userobject
-  # [./flowstress]
-  #   type = HEVAnandHardening
-  #   hardening_exponent = 1.8
-  #   saturation_hardening = 80e-3
-  #   hardening_modulus = 400e-3
-  #   initial_yield_stress = 20e-3
-  #   intvar_prop_name = ep_eqv
-  #   block = 'substrate'
-  # [../]
-  [./flowrate]
-    type = HEVPFlowRatePowerLawJ2
-    reference_flow_rate = 0.05
-    flow_rate_exponent = 5.555
-    flow_rate_tol = 5.0
-    strength_prop_name = flowstress
-    block = 'substrate'
-  [../]
-  [./ep_eqv]
-     type = HEVPEqvPlasticStrain
-     intvar_rate_prop_name = ep_eqv_rate
-     block = 'substrate'
-  [../]
-  [./ep_eqv_rate]
-     type = HEVPEqvPlasticStrainRate
-     flow_rate_prop_name = flowrate
-     block = 'substrate'
-  [../]
 []
 #
 

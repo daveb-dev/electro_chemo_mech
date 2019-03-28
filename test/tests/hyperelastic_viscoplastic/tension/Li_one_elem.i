@@ -15,10 +15,25 @@
 
 [Variables]
   [./ux]
+    # [./InitialCondition]
+    #   type = RandomIC
+    #   max = 1.0e-5
+    #   min = 0
+    # [../]
   [../]
   [./uy]
+    # [./InitialCondition]
+    #   type = RandomIC
+    #   max = 1.0e-5
+    #   min = -1.0e-5
+    # [../]
   [../]
   [./uz]
+  #   [./InitialCondition]
+  #     type = RandomIC
+  #     max = 1.0e-5
+  #     min = 0
+  #   [../]
   [../]
 []
 
@@ -130,8 +145,8 @@
     reference_strain_rate = 0.05
     effective_inelastic_strain_name = effective_plastic_strain
     max_inelastic_increment = 1.0
-    internal_solve_full_iteration_history = true
-    internal_solve_output_on = always
+    # internal_solve_full_iteration_history = true
+    # internal_solve_output_on = always
   [../]
 []
 
@@ -184,10 +199,10 @@
   dtmin = 1.0e-8
   [./TimeStepper]
     type = IterationAdaptiveDT
-    dt = 5.0e-3
+    dt = 0.01
     growth_factor = 1.5
     cutback_factor = 0.25
-    optimal_iterations = 5
+    optimal_iterations = 10
   [../]
   # num_steps = 10
   end_time = 0.04

@@ -78,11 +78,18 @@ protected:
   
   virtual Real initialGuess(const Real /*effective_trial_stress*/) { return 1.0; }
 
+  virtual Real minimumPermissibleValue(const Real) const override;
+
   
   virtual void computeStressInitialize(const Real effective_trial_stress,
                                        const RankFourTensor & elasticity_tensor) override;
   
-  virtual Real computeStressDerivative(const Real effective_trial_stress, const Real scalar);
+  virtual TangentCalculationMethod getTangentCalculationMethod() override
+  {
+    return TangentCalculationMethod::PARTIAL;
+  }
+  
+//  virtual Real computeStressDerivative(const Real effective_trial_stress, const Real scalar);
 
   virtual Real computeResidual(const Real effective_trial_stress, const Real scalar) override;
   virtual Real computeDerivative(const Real effective_trial_stress, const Real scalar) override;
