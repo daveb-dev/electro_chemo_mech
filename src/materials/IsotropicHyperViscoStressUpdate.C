@@ -243,6 +243,8 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
     
         
     RankTwoTensor deviatoric_trial_stress = Me_tr.deviatoric();
+    Real norm_dev_trial_stress = 
+            std::sqrt(deviatoric_trial_stress.doubleContraction(deviatoric_trial_stress));
  
     // compute the effective trial stress
   Real dev_trial_stress_squared =
@@ -268,25 +270,33 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
   }
   else
     inelastic_strain_increment.zero();
+  if (scalar_effective_inelastic_strain > 0.0) 
+  {
+    strain_increment -= inelastic_strain_increment;
+    _effective_inelastic_strain[_qp] = 
+        _effective_inelastic_strain_old[_qp] + _dt * scalar_effective_inelastic_strain;
 
-  strain_increment -= inelastic_strain_increment;
-  _effective_inelastic_strain[_qp] = 
-      _effective_inelastic_strain_old[_qp] + _dt * scalar_effective_inelastic_strain;
+  //  _effective_inelastic_strain[_qp] = scalar_effective_inelastic_strain;
 
-//  _effective_inelastic_strain[_qp] = scalar_effective_inelastic_strain;
-  
-//  // Compute new Cauchy stress
-  
-  RankTwoTensor dpt = inelastic_strain_increment * _dt;
-  dpt.symmetricEigenvaluesEigenvectors(e_value, e_vector);
-  
-  N1.vectorOuterProduct(e_vector.column(0), e_vector.column(0));
-  N2.vectorOuterProduct(e_vector.column(1), e_vector.column(1));
-  N3.vectorOuterProduct(e_vector.column(2), e_vector.column(2));
-  RankTwoTensor expDp = N1 * std::exp(e_value[0]) + 
-                        N2 * std::exp(e_value[1]) + 
-                        N3 * std::exp(e_value[2]);  
-  _Fp[_qp] = expDp * _Fp_old[_qp];
+  //  // Compute new Cauchy stress
+
+    RankTwoTensor dpt = inelastic_strain_increment * _dt;
+    dpt.symmetricEigenvaluesEigenvectors(e_value, e_vector);
+
+    N1.vectorOuterProduct(e_vector.column(0), e_vector.column(0));
+    N2.vectorOuterProduct(e_vector.column(1), e_vector.column(1));
+    N3.vectorOuterProduct(e_vector.column(2), e_vector.column(2));
+    RankTwoTensor expDp = N1 * std::exp(e_value[0]) + 
+                          N2 * std::exp(e_value[1]) + 
+                          N3 * std::exp(e_value[2]);  
+    _Fp[_qp] = expDp * _Fp_old[_qp];
+
+    mooseAssert(_Fp[_qp].det() > 0.0, "Det of Fp less than 0");
+    
+  } else
+  {
+      _Fp[_qp] = _Fp_old[_qp];
+  }
   Fp_inv = _Fp[_qp].inverse();
   Fe_tr = _deformation_gradient[_qp] * Fp_inv;
   
@@ -310,8 +320,6 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
   
   stress_new = R_tr * (Me_tau * R_tr.transpose()) / _deformation_gradient[_qp].det();
   
-  RankFourTensor ss = stress_new.outerProduct(stress_new);
-  mooseAssert(ss.isSymmetric(), "New Cauchy stress isn't symmetric");
   
   computeStressFinalize(inelastic_strain_increment);
 
@@ -333,33 +341,40 @@ IsotropicHyperViscoStressUpdate::updateState(RankTwoTensor & strain_increment,
       
       mooseAssert(_three_shear_modulus != 0.0, "Shear modulus is zero");
 
-      const RankTwoTensor deviatoric_stress = stress_new.deviatoric();
+      const RankTwoTensor deviatoric_stress = Me_tau.deviatoric();
       const Real norm_dev_stress =
           std::sqrt(deviatoric_stress.doubleContraction(deviatoric_stress));
       mooseAssert(norm_dev_stress != 0.0, "Norm of the deviatoric is zero");
 
       Real ratio = 1.0;
+      RankFourTensor flow_direction_dyad(RankFourTensor::initIdentitySymmetricFour);
       if (effective_trial_stress > 0.0)
+      {
         ratio = std::sqrt(1.5) * norm_dev_stress  / effective_trial_stress;
-      
-      const RankTwoTensor flow_direction = deviatoric_stress / norm_dev_stress;
-      const RankFourTensor flow_direction_dyad = flow_direction.outerProduct(flow_direction);
+        const RankTwoTensor flow_direction = deviatoric_trial_stress / norm_dev_trial_stress;
+        flow_direction_dyad = flow_direction.outerProduct(flow_direction);
+      }
+
       mooseAssert(flow_direction_dyad.isSymmetric(), "Dyad operator isn't symmetric");
-      // Elastic part
-      tangent_operator = mu * ratio * II + (bulk - 2.0/3.0 * mu * ratio) * II2;
       
-//      // Plastic part
-//      if (effective_trial_stress > 0.0 && scalar_effective_inelastic_strain > 0.0 ) 
-//      {    
-//        const Real fac1 = 2.0 *mu * (1.0 - ratio);
-//        const Real hslope = computeHardeningDerivative(scalar_effective_inelastic_strain);
-//        const Real qq = std::pow((scalar_effective_inelastic_strain/_shear_rate), _mrate);
-//        
-//        const Real den1 = hslope * qq;
-//        const Real den2 = _strength_variable[_qp] * _mrate / scalar_effective_inelastic_strain * qq;
-//        const Real fac2 = 2.0 * mu * mu * _dt / (mu * _dt + den1 + den2);
-//        tangent_operator += (fac1 - fac2) * flow_direction_dyad;
-//      }
+      
+      // Elastic part
+      tangent_operator = (mu * ratio * II + (bulk - 2.0/3.0 * mu * ratio) * II2 );
+//      tangent_operator.zero();
+//      tangent_operator = _elasticity_tensor[_qp];
+      
+      // Plastic part
+      if (effective_trial_stress > 0.0 && scalar_effective_inelastic_strain > 0.0 ) 
+      {    
+        const Real fac1 = 2.0 *mu * (1.0 - ratio);
+        const Real hslope = computeHardeningDerivative(scalar_effective_inelastic_strain);
+        const Real qq = std::pow((scalar_effective_inelastic_strain/_shear_rate), _mrate);
+        
+        const Real den1 = hslope * qq;
+        const Real den2 = _strength_variable[_qp] * _mrate / scalar_effective_inelastic_strain * qq;
+        const Real fac2 = 2.0 * mu * mu * _dt / (mu * _dt  + den2);
+        tangent_operator += (fac1 - fac2) * flow_direction_dyad ;
+      }
       
     }
   } 

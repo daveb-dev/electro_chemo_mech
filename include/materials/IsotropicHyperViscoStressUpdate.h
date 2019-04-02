@@ -86,7 +86,7 @@ protected:
   
   virtual TangentCalculationMethod getTangentCalculationMethod() override
   {
-    return TangentCalculationMethod::PARTIAL;
+    return TangentCalculationMethod::FULL;
   }
   
 //  virtual Real computeStressDerivative(const Real effective_trial_stress, const Real scalar);

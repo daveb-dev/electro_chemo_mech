@@ -1,8 +1,8 @@
 [Mesh]
   type = GeneratedMesh
-  xmax = 1.0e-3
-  ymax = 1.0e-3
-  zmax = 1.0e-3
+  xmax = 1e-3
+  ymax = 1e-3
+  zmax = 1e-3
   nx = 1
   ny = 1
   nz = 1
@@ -29,18 +29,18 @@
     # [../]
   [../]
   [./uz]
-  #   [./InitialCondition]
-  #     type = RandomIC
-  #     max = 1.0e-5
-  #     min = 0
-  #   [../]
+    [./InitialCondition]
+      type = RandomIC
+      max = 1.0e-5
+      min = 0
+    [../]
   [../]
 []
 
 [Functions]
   [./vel2]
     type = ParsedFunction
-    value = '0.0003*(exp(0.3002*t))'
+    value = '0.0006*(exp(0.3002*t))'
   [../]
 []
 
@@ -51,6 +51,7 @@
     use_displaced_mesh = true
     volumetric_locking_correction = true
     generate_output = 'stress_zz strain_zz'
+    # use_finite_deform_jacobian = true
   [../]
 []
 
@@ -135,8 +136,8 @@
   [../]
   [./plas]
     type = IsotropicHyperViscoStressUpdate
-    absolute_tolerance = 1e-8
-    relative_tolerance = 1e-08
+    absolute_tolerance = 1e-5
+    relative_tolerance = 1e-06
     hardening_exponent = 1.8
     saturation_resistance = 8.0e6
     initial_resistance = 2.0e6
@@ -204,8 +205,8 @@
     cutback_factor = 0.25
     optimal_iterations = 10
   [../]
-  # num_steps = 10
-  end_time = 0.04
+  num_steps = 1
+  # end_time = 0.02
 []
 
 [Outputs]
